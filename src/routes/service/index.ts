@@ -1,5 +1,6 @@
 import {FastifyPluginAsync} from "fastify";
-import {generateVAPIDKeys, sendNotification, setVapidDetails} from 'web-push';
+import * as webPush from 'web-push'
+import {subscribeSchema} from "./schema";
 
 const vapidKeys = {
     publicKey: process.env.VAPID_PUBLIC_KEY,
@@ -8,29 +9,28 @@ const vapidKeys = {
 
 if (!vapidKeys.publicKey || !vapidKeys.privateKey) {
     console.warn("Invalid VAPID_PUBLIC_KEY or VAPID_PRIVATE_KEY, you can use this generate one:");
-    console.log(generateVAPIDKeys());
+    console.log(webPush.generateVAPIDKeys());
     process.exit(1);
 }
 
 
-setVapidDetails('mailto:particle_g@outlook.com', vapidKeys.publicKey, vapidKeys.privateKey);
+webPush.setVapidDetails('mailto:particle_g@outlook.com', vapidKeys.publicKey, vapidKeys.privateKey);
 
 const service: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     fastify.get('/key', async (request, reply) => {
         return {data: vapidKeys.publicKey};
     });
-    fastify.post('/subscribe', async (request, reply) => {
+    fastify.post('/subscribe', {schema: subscribeSchema}, async (request, reply) => {
         const body: any = request.body;
-        console.log(body);
-        const result = await sendNotification(
+        console.log(body.subscription);
+        await webPush.sendNotification(
             body.subscription,
             JSON.stringify({
                 title: "Subscription Result",
                 body: "Subscribe successfully!",
             })
         );
-        console.log(result);
-        return result;
+        return {};
     });
 }
 
