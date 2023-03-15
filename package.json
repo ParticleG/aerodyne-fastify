@@ -24,6 +24,7 @@
     "fastify": "^4.0.0",
     "fastify-cli": "^5.7.1",
     "fastify-plugin": "^4.0.0",
+    "oicq": "^2.3.1",
     "web-push": "^3.5.0"
   },
   "devDependencies": {
