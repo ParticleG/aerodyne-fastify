@@ -15,6 +15,13 @@ enum LoginType {
 }
 
 const oicq: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
+    fastify.get('/', {websocket: true}, (connection, req) => {
+        console.log(req);
+        connection.socket.on('message', message => {
+            console.log("Client: " + message.toString());
+            connection.socket.send('hi from server')
+        })
+    });
     fastify.post<{ Body: LoginBody }>('/login', {schema: loginSchema}, (request, reply) => {
         const {account, password} = request.body;
         const client = createClient(account, {log_level: "warn"});
