@@ -1,11 +1,13 @@
 import {FastifyPluginAsync} from "fastify";
 import {loginSchema} from "./schema";
+import {parseJsonMessage} from "./types";
 
 const oicq: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     fastify.get('/', {websocket: true}, (connection, req) => {
         console.log(req);
         connection.socket.on('message', message => {
             console.log("Client: " + message.toString());
+            console.log("Parsed: ", parseJsonMessage(message.toString()));
             connection.socket.send('hi from server')
         });
     });

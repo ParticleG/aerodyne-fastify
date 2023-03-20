@@ -13,7 +13,12 @@ export type AppOptions = {
 const options: AppOptions = {}
 
 const app: FastifyPluginAsync<AppOptions> = async (fastify, opts): Promise<void> => {
-    await fastify.register(websocket, {});
+    await fastify.register(websocket, {
+        errorHandler: function (error, conn /* SocketStream */, req /* FastifyRequest */, reply /* FastifyReply */) {
+            console.log(error);
+            conn.destroy(error);
+        }
+    });
     await fastify.register(cors, {});
 
     // Do not touch the following lines
