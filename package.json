@@ -35,6 +35,7 @@
     "@types/ws": "^8.5.4",
     "concurrently": "^7.0.0",
     "fastify-tsconfig": "^1.0.1",
+    "prettier": "2.8.6",
     "tap": "^16.1.0",
     "ts-node": "^10.4.0",
     "typescript": "^4.5.4"

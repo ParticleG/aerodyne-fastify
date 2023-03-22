@@ -1,11 +1,11 @@
 const subscribeSchema = {
-    body: {
-        type: 'object',
-        required: ['subscription'],
-        properties: {
-            subscription: {type: 'object'},
-        },
-    }
+  body: {
+    type: "object",
+    required: ["subscription"],
+    properties: {
+      subscription: { type: "object" },
+    },
+  },
 };
 
-export {subscribeSchema};
+export { subscribeSchema };
