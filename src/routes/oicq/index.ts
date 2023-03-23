@@ -1,26 +1,22 @@
 import { FastifyPluginAsync } from "fastify";
-import { loginSchema } from "./schema";
+import { parse } from "./utils";
 
 const oicq: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
   fastify.get("/", { websocket: true }, (connection, req) => {
-    // console.log(req);
-    connection.socket.on("message", (message) => {
-      console.log("Client: " + message.toString());
-      console.log("Parsed: ", message.toString());
-      connection.socket.send("hi from server");
+    const socket = connection.socket;
+    socket.on("message", (message) => {
+      try {
+        const wsMessage = parse(message.toString());
+        console.log(JSON.stringify(wsMessage, null, 2));
+        socket.send("hi from server");
+      } catch (errorMessage: any) {
+        if (errorMessage.isFatal) {
+          socket.close(1011, errorMessage.toString());
+        } else {
+          socket.send(errorMessage.toString());
+        }
+      }
     });
-  });
-  fastify.post<{
-    Body: { account: number; password: string };
-  }>("/login", { schema: loginSchema }, async (request, reply) => {
-    const { account, password } = request.body;
-    return await fastify.login(account, password);
-  });
-  fastify.post<{
-    Body: { account: number; payload: string };
-  }>("/postLogin", async (request, reply) => {
-    const { account, payload } = request.body;
-    return await fastify.postLogin(account, payload);
   });
 };
 

@@ -2,6 +2,7 @@ import fp from "fastify-plugin";
 import { Client } from "icqq/lib/client";
 import { Platform } from "icqq/lib/core";
 import { createClient } from "icqq";
+import { WebSocket } from "ws";
 
 enum ClientState {
   Null = -1,
@@ -106,7 +107,7 @@ export default fp(async (fastify, opts) => {
 
 declare module "fastify" {
   export interface FastifyInstance {
-    login(account: number, password?: string): Promise<any>;
+    login(socket: WebSocket, account?: number, password?: string): Promise<any>;
 
     postLogin(account: number, payload?: string): void;
   }

@@ -22,8 +22,8 @@ const app: FastifyPluginAsync<AppOptions> = async (
       req /* FastifyRequest */,
       reply /* FastifyReply */
     ) {
+      console.log("errorHandler");
       console.log(error);
-      conn.destroy(error);
     },
   });
   await fastify.register(cors, {});

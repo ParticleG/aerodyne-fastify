@@ -13,6 +13,27 @@ interface WsMessage {
   data: any;
 }
 
+class ErrorMessage {
+  isFatal: boolean = false;
+  message: string;
+  action: WsAction | undefined;
+  reasons: string[] | undefined;
+
+  constructor(message?: string, action?: number, reasons?: string[]) {
+    this.message = message ? message : "Unknown error";
+    this.action = action;
+    this.reasons = reasons;
+  }
+
+  toString() {
+    return JSON.stringify({
+      action: this.action,
+      message: this.message,
+      reasons: this.reasons,
+    });
+  }
+}
+
 const WsMessageSchema: JTDSchemaType<WsMessage> = {
   properties: {
     action: { type: "uint32" },
@@ -61,14 +82,23 @@ dataValidators[WsAction.Message] = ajv.compile({
 function parse(raw: string): WsMessage {
   const message: WsMessage | undefined = WsMessageParser(raw);
   if (message === undefined) {
-    throw new Error(WsMessageParser.message);
+    throw new ErrorMessage(WsMessageParser.message, undefined, [
+      `Error at: ${WsMessageParser.position}`,
+    ]);
   }
   const validator: ValidateFunction = dataValidators[message.action];
   if (validator === undefined) {
-    throw new Error(`Invalid action number: ${message.action}`);
+    throw new ErrorMessage("Invalid action number", message.action);
   }
   if (!validator(message.data)) {
-    throw new Error(JSON.stringify(validator.errors));
+    throw new ErrorMessage(
+      "Invalid message data",
+      message.action,
+      validator.errors?.map(
+        (e) =>
+          `${e.instancePath} ${e.message ? e.message : "has unknown error"}`
+      )
+    );
   }
   return message;
 }
