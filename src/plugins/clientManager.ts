@@ -3,6 +3,9 @@ import { Client } from "icqq/lib/client";
 import { Platform } from "icqq/lib/core";
 import { createClient } from "icqq";
 import { WebSocket } from "ws";
+import { ErrorMessage, WsAction } from "../routes/oicq/types";
+
+type oicqAccount = number;
 
 enum ClientState {
   Null = -1,
@@ -19,6 +22,25 @@ class ClientWrapper {
     this.state = ClientState.Initializing;
     this.client.on("message", (e: any) => {
       console.log(e);
+    });
+  }
+
+  subscribe(socket: WebSocket) {
+    this.client.on("system.login.device", (e: any) => {
+      socket.send(JSON.stringify({ state: this.state, data: e }));
+      this.client.sendSmsCode();
+    });
+    this.client.on("system.login.qrcode", (e: any) => {
+      socket.send(JSON.stringify({ state: this.state, data: e }));
+    });
+    this.client.on("system.login.slider", (e: any) => {
+      socket.send(JSON.stringify({ state: this.state, data: e }));
+    });
+    this.client.on("system.online", () => {
+      socket.send(JSON.stringify({ state: this.state }));
+    });
+    this.client.on("system.login.error", (e: any) => {
+      socket.send(JSON.stringify({ state: this.state, data: e }));
     });
   }
 
@@ -53,6 +75,7 @@ class ClientWrapper {
 
   client: Client;
   state: ClientState;
+  socket?: WebSocket;
 
   private getLoginPromise() {
     return new Promise<any>((resolve, reject) => {
@@ -80,9 +103,26 @@ class ClientWrapper {
   }
 }
 
-const clientsTable = new Map<number, ClientWrapper>();
+const clientsTable = new Map<oicqAccount, ClientWrapper>();
 
 export default fp(async (fastify, opts) => {
+  fastify.decorate(
+    "subscribe",
+    (
+      socket: WebSocket,
+      account: number,
+      platform: Platform = Platform.Watch
+    ) => {
+      console.log(clientsTable.has(account));
+      if (clientsTable.get(account)?.socket !== undefined) {
+        throw new ErrorMessage(
+          "Account has already been bound to another user",
+          WsAction.Subscribe
+        );
+      }
+      return clientsTable.set(account, new ClientWrapper(Platform.iPad));
+    }
+  );
   fastify.decorate("login", (account: number, password?: string) => {
     console.log(clientsTable.has(account));
     if (clientsTable.has(account)) {
@@ -107,8 +147,6 @@ export default fp(async (fastify, opts) => {
 
 declare module "fastify" {
   export interface FastifyInstance {
-    login(socket: WebSocket, account?: number, password?: string): Promise<any>;
-
-    postLogin(account: number, payload?: string): void;
+    subscribe(socket: WebSocket, account: number): boolean;
   }
 }
