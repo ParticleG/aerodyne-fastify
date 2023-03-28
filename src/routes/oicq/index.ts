@@ -1,12 +1,12 @@
 import { FastifyPluginAsync } from "fastify";
-import { parse } from "./utils";
+import { parseWsMessage } from "./utils";
 
 const oicq: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
   fastify.get("/", { websocket: true }, (connection, req) => {
     const socket = connection.socket;
     socket.on("message", (message) => {
       try {
-        const wsMessage = parse(message.toString());
+        const wsMessage = parseWsMessage(message.toString());
         console.log(JSON.stringify(wsMessage, null, 2));
         socket.send("hi from server");
       } catch (errorMessage: any) {

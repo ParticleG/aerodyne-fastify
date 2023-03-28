@@ -1,8 +1,21 @@
+type UserId = number;
+type OicqAccount = number;
+type UUID = string;
+
 enum WsAction {
   Subscribe,
   Login,
   Validate,
   Message,
+}
+
+enum ClientState {
+  Null = -1,
+  Initializing,
+  WaitingSmsCode,
+  WaitingQRCode,
+  WaitingSlider,
+  Online,
 }
 
 interface WsMessage {
@@ -31,4 +44,12 @@ class ErrorMessage {
   }
 }
 
-export { WsAction, WsMessage, ErrorMessage };
+export {
+  UserId,
+  OicqAccount,
+  UUID,
+  WsAction,
+  ClientState,
+  WsMessage,
+  ErrorMessage,
+};

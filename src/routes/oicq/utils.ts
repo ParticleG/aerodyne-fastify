@@ -14,6 +14,14 @@ const WsMessageParser = ajv.compileParser(WsMessageSchema);
 
 const dataValidators: ValidateFunction[] = [];
 
+dataValidators[WsAction.Subscribe] = ajv.compile({
+  optionalProperties: {
+    payload: { type: "string" },
+  },
+} as JTDSchemaType<{
+  payload: string | undefined;
+}>);
+
 dataValidators[WsAction.Login] = ajv.compile({
   properties: {
     account: { type: "uint32" },
@@ -48,7 +56,7 @@ dataValidators[WsAction.Message] = ajv.compile({
   message: string;
 }>);
 
-function parse(raw: string): WsMessage {
+function parseWsMessage(raw: string): WsMessage {
   const message: WsMessage | undefined = WsMessageParser(raw);
   if (message === undefined) {
     throw new ErrorMessage(WsMessageParser.message, undefined, [
@@ -72,4 +80,4 @@ function parse(raw: string): WsMessage {
   return message;
 }
 
-export { parse, WsMessage };
+export { parseWsMessage, WsMessage };
