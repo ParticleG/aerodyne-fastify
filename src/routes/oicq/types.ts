@@ -30,7 +30,7 @@ class ErrorMessage {
   reasons: string[] | undefined;
 
   constructor(message?: string, action?: number, reasons?: string[]) {
-    this.message = message ? message : "Unknown error";
+    this.message = message ?? "Unknown error";
     this.action = action;
     this.reasons = reasons;
   }
