@@ -40,6 +40,13 @@ export default class WsConnection {
           case WsAction.Subscribe:
             const { account } = wsMessage.data;
             UserManager.connectClient(this, account);
+            this.send(
+              JSON.stringify({
+                action: wsMessage.action,
+                result: "success",
+                data: await getSystemInfo(),
+              })
+            );
             break;
           case WsAction.Login:
             break;
