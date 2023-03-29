@@ -44,12 +44,14 @@ export default class OicqClient {
   }
 
   subscribe(wsConnection: WsConnection) {
-    wsConnection.clients.push(this);
+    wsConnection.clientMap.set(this.account, this);
     this.socketMap.set(wsConnection.wsId, wsConnection);
+    console.log("Subscribed: ", this.socketMap);
   }
 
   unsubscribe(wsId: UUID) {
     this.socketMap.delete(wsId);
+    console.log("Unsubscribed", this.socketMap);
   }
 
   login(account: OicqAccount, password?: string) {
@@ -76,7 +78,7 @@ export default class OicqClient {
     }
   }
 
-  private broadcast(action: WsAction, data?: any) {
+  broadcast(action: WsAction, data?: any) {
     const message = JSON.stringify({
       action: action,
       data: data,

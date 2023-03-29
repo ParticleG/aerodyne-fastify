@@ -3,6 +3,7 @@ type OicqAccount = number;
 type UUID = string;
 
 enum WsAction {
+  Monitor,
   Subscribe,
   Login,
   Validate,

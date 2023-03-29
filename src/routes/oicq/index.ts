@@ -1,22 +1,17 @@
 import { FastifyPluginAsync } from "fastify";
-import { parseWsMessage } from "./utils";
+import WsConnection from "./WsConnection";
+import { WsAction } from "./types";
+import { getSystemInfo } from "./utils";
 
 const oicq: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
-  fastify.get("/", { websocket: true }, (connection, req) => {
-    const socket = connection.socket;
-    socket.on("message", (message) => {
-      try {
-        const wsMessage = parseWsMessage(message.toString());
-        console.log(JSON.stringify(wsMessage, null, 2));
-        socket.send("hi from server");
-      } catch (errorMessage: any) {
-        if (errorMessage.isFatal) {
-          socket.close(1011, errorMessage.toString());
-        } else {
-          socket.send(errorMessage.toString());
-        }
-      }
-    });
+  fastify.get("/", { websocket: true }, async (connection, req) => {
+    const wsConnection = new WsConnection(0, connection.socket);
+    wsConnection.send(
+      JSON.stringify({
+        action: WsAction.Monitor,
+        data: await getSystemInfo(),
+      })
+    );
   });
 };
 

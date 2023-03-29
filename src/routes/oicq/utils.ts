@@ -1,4 +1,6 @@
 import Ajv, { JTDSchemaType, ValidateFunction } from "ajv/dist/jtd";
+import { cpu, mem, os } from "node-os-utils";
+
 import { ErrorMessage, WsAction, WsMessage } from "./types";
 
 const ajv = new Ajv();
@@ -15,23 +17,19 @@ const WsMessageParser = ajv.compileParser(WsMessageSchema);
 const dataValidators: ValidateFunction[] = [];
 
 dataValidators[WsAction.Subscribe] = ajv.compile({
+  properties: {
+    account: { type: "uint32" },
+  },
+} as JTDSchemaType<{
+  account: number;
+}>);
+
+dataValidators[WsAction.Login] = ajv.compile({
   optionalProperties: {
     payload: { type: "string" },
   },
 } as JTDSchemaType<{
   payload: string | undefined;
-}>);
-
-dataValidators[WsAction.Login] = ajv.compile({
-  properties: {
-    account: { type: "uint32" },
-  },
-  optionalProperties: {
-    password: { type: "string" },
-  },
-} as JTDSchemaType<{
-  account: number;
-  password: string | undefined;
 }>);
 
 dataValidators[WsAction.Validate] = ajv.compile({
@@ -80,4 +78,21 @@ function parseWsMessage(raw: string): WsMessage {
   return message;
 }
 
-export { parseWsMessage, WsMessage };
+async function getSystemInfo() {
+  return {
+    cpu: {
+      cores: cpu.count(),
+      model: cpu.model(),
+      usage: await cpu.usage(),
+    },
+    memory: await mem.info(),
+    os: {
+      arch: os.arch(),
+      hostname: os.hostname(),
+      name: await os.oos(),
+      platform: os.platform(),
+    },
+  };
+}
+
+export { parseWsMessage, getSystemInfo };
