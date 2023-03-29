@@ -16,6 +16,8 @@ const WsMessageParser = ajv.compileParser(WsMessageSchema);
 
 const dataValidators: ValidateFunction[] = [];
 
+dataValidators[WsAction.Monitor] = ajv.compile({} as JTDSchemaType<null>);
+
 dataValidators[WsAction.Subscribe] = ajv.compile({
   properties: {
     account: { type: "uint32" },
