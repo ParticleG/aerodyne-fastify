@@ -1,11 +1,11 @@
 import Ajv, { JTDSchemaType, ValidateFunction } from "ajv/dist/jtd";
 import { cpu, mem, os } from "node-os-utils";
 
-import { ErrorMessage, WsAction, WsMessage } from "./types";
+import { WsAction, WsRequest, WsFailureResponse } from "./types";
 
 const ajv = new Ajv();
 
-const WsMessageSchema: JTDSchemaType<WsMessage> = {
+const WsMessageSchema: JTDSchemaType<WsRequest> = {
   properties: {
     action: { type: "uint32" },
   },
@@ -56,21 +56,21 @@ dataValidators[WsAction.Message] = ajv.compile({
   message: string;
 }>);
 
-function parseWsMessage(raw: string): WsMessage {
-  const message: WsMessage | undefined = WsMessageParser(raw);
+function parseWsMessage(raw: string): WsRequest {
+  const message: WsRequest | undefined = WsMessageParser(raw);
   if (message === undefined) {
-    throw new ErrorMessage(WsMessageParser.message, undefined, [
+    throw new WsFailureResponse(WsAction.Invalid, WsMessageParser.message, [
       `Error at: ${WsMessageParser.position}`,
     ]);
   }
   const validator: ValidateFunction = dataValidators[message.action];
   if (validator === undefined) {
-    throw new ErrorMessage("Invalid action number", message.action);
+    throw WsFailureResponse.fromRequest(message, "Invalid action number");
   }
   if (!validator(message.data)) {
-    throw new ErrorMessage(
+    throw WsFailureResponse.fromRequest(
+      message,
       "Invalid message data",
-      message.action,
       validator.errors?.map(
         (e) =>
           `${e.instancePath} ${e.message ? e.message : "has unknown error"}`

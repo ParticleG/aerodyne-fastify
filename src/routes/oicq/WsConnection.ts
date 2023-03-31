@@ -1,5 +1,5 @@
 import { v4 as uuid } from "uuid";
-import { WebSocket } from "ws";
+import { RawData, WebSocket } from "ws";
 
 import OicqClient from "./OicqClient";
 import UserManager from "./UserManager";
@@ -25,47 +25,51 @@ export default class WsConnection {
     });
     this.socket = ws;
     this.socket.on("message", async (message) => {
-      try {
-        const wsMessage = parseWsMessage(message.toString());
-        console.log(JSON.stringify(wsMessage, null, 2));
-        switch (wsMessage.action) {
-          case WsAction.Monitor:
-            this.send(
-              JSON.stringify({
-                action: wsMessage.action,
-                data: await getSystemInfo(),
-              })
-            );
-            break;
-          case WsAction.Subscribe:
-            const { account } = wsMessage.data;
-            UserManager.connectClient(this, account);
-            this.send(
-              JSON.stringify({
-                action: wsMessage.action,
-                result: "success",
-                data: await getSystemInfo(),
-              })
-            );
-            break;
-          case WsAction.Login:
-            break;
-          case WsAction.Validate:
-            break;
-          case WsAction.Message:
-            break;
-        }
-      } catch (errorMessage: any) {
-        if (errorMessage.isFatal) {
-          this.socket.close(1011, errorMessage.toString());
-        } else {
-          this.socket.send(errorMessage.toString());
-        }
-      }
+      await this.handleMessage(message);
     });
   }
 
   send(message: string) {
     this.socket.send(message);
+  }
+
+  private async handleMessage(message: RawData) {
+    try {
+      const wsMessage = parseWsMessage(message.toString());
+      console.log(JSON.stringify(wsMessage, null, 2));
+      switch (wsMessage.action) {
+        case WsAction.Monitor:
+          this.send(
+            JSON.stringify({
+              action: wsMessage.action,
+              data: await getSystemInfo(),
+            })
+          );
+          break;
+        case WsAction.Subscribe:
+          const { account } = wsMessage.data;
+          UserManager.connectClient(this, account);
+          this.send(
+            JSON.stringify({
+              action: wsMessage.action,
+              result: "success",
+              data: await getSystemInfo(),
+            })
+          );
+          break;
+        case WsAction.Login:
+          break;
+        case WsAction.Validate:
+          break;
+        case WsAction.Message:
+          break;
+      }
+    } catch (errorMessage: any) {
+      if (errorMessage.isFatal) {
+        this.socket.close(1011, errorMessage.toString());
+      } else {
+        this.socket.send(errorMessage.toString());
+      }
+    }
   }
 }

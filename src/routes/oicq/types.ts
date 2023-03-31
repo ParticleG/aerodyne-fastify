@@ -1,8 +1,10 @@
 type UserId = number;
 type OicqAccount = number;
 type UUID = string;
+type WsResult = "success" | "failure" | "error";
 
 enum WsAction {
+  Invalid = -1,
   Monitor,
   Subscribe,
   Login,
@@ -19,29 +21,74 @@ enum ClientState {
   Online,
 }
 
-interface WsMessage {
+interface WsRequest {
   action: WsAction;
   data: any;
 }
 
-class ErrorMessage {
-  isFatal: boolean = false;
-  message: string;
-  action: WsAction | undefined;
-  reasons: string[] | undefined;
+interface WsResponse extends WsRequest {
+  result: WsResult;
+  message?: string;
+  reasons?: string[];
+}
 
-  constructor(message?: string, action?: number, reasons?: string[]) {
-    this.message = message ?? "Unknown error";
-    this.action = action;
+class WsResponse {
+  constructor(
+    result: WsResult,
+    action?: number,
+    data?: any,
+    message?: string,
+    reasons?: string[]
+  ) {
+    this.result = result;
+    if (action === undefined || !Object.values(WsAction).includes(action)) {
+      this.action = WsAction.Invalid;
+    } else {
+      this.action = action;
+    }
+    this.data = data;
+    this.message = message;
     this.reasons = reasons;
   }
 
   toString() {
     return JSON.stringify({
+      result: this.result,
       action: this.action,
+      data: this.data,
       message: this.message,
       reasons: this.reasons,
     });
+  }
+}
+
+class WsSuccessResponse extends WsResponse {
+  constructor(action: number, data?: any) {
+    super("success", action, data);
+  }
+
+  static fromRequest(request: WsRequest, data?: any) {
+    return new this(request.action, data);
+  }
+}
+
+class WsFailureResponse extends WsResponse {
+  constructor(action: number, message?: string, reasons?: string[]) {
+    super("failure", action, undefined, message, reasons);
+  }
+
+  static fromRequest(request: WsRequest, message?: string, reasons?: string[]) {
+    return new this(request.action, message, reasons);
+  }
+}
+
+class WsErrorResponse extends WsResponse {
+  constructor(action: number, message?: string, reasons?: string[]) {
+    super("error", action, undefined, message, reasons);
+  }
+
+  static fromRequest(request: WsRequest, message?: string, reasons?: string[]) {
+    return new this(request.action, message, reasons);
   }
 }
 
@@ -51,6 +98,9 @@ export {
   UUID,
   WsAction,
   ClientState,
-  WsMessage,
-  ErrorMessage,
+  WsRequest,
+  WsResponse,
+  WsSuccessResponse,
+  WsFailureResponse,
+  WsErrorResponse,
 };
