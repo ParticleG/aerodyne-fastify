@@ -1,5 +1,13 @@
 import { Client } from "icqq/lib/client";
-import { ClientState, OicqAccount, UUID, WsAction } from "./types";
+import {
+  ClientState,
+  OicqAccount,
+  UUID,
+  WsAction,
+  WsFailureResponse,
+  WsResponse,
+  WsSuccessResponse,
+} from "./types";
 import { Platform } from "icqq/lib/core";
 import { createClient } from "icqq";
 import WsConnection from "./WsConnection";
@@ -17,41 +25,47 @@ export default class OicqClient {
 
     this.client.on("message", (e: any) => {
       console.log(e);
-      this.broadcast(WsAction.Message, e);
+      this.broadcast(new WsSuccessResponse(WsAction.Message, e));
     });
 
     this.client.on("system.login.device", (e: any) => {
       this.state = ClientState.WaitingSmsCode;
       this.client.sendSmsCode();
-      this.broadcast(WsAction.Login, e);
+      this.broadcast(new WsSuccessResponse(WsAction.Login, e));
     });
     this.client.on("system.login.qrcode", (e: any) => {
       this.state = ClientState.WaitingQRCode;
-      this.broadcast(WsAction.Login, e);
+      this.broadcast(new WsSuccessResponse(WsAction.Login, e));
     });
     this.client.on("system.login.slider", (e: any) => {
       this.state = ClientState.WaitingSlider;
-      this.broadcast(WsAction.Login, e);
+      this.broadcast(new WsSuccessResponse(WsAction.Login, e));
     });
     this.client.on("system.online", () => {
       this.state = ClientState.Online;
-      this.broadcast(WsAction.Login);
+      this.broadcast(new WsSuccessResponse(WsAction.Login));
     });
     this.client.on("system.login.error", (e: any) => {
       this.state = ClientState.Initializing;
-      this.broadcast(WsAction.Login, e);
+      this.broadcast(new WsFailureResponse(WsAction.Login, e));
     });
   }
 
   subscribe(wsConnection: WsConnection) {
-    wsConnection.clientMap.set(this.account, this);
+    wsConnection.subscribe(this);
     this.socketMap.set(wsConnection.wsId, wsConnection);
-    console.log("Subscribed: ", this.socketMap);
+    console.log(
+      "[Subscribe]Client's subscriber map size: ",
+      this.socketMap.size
+    );
   }
 
   unsubscribe(wsId: UUID) {
     this.socketMap.delete(wsId);
-    console.log("Unsubscribed", this.socketMap);
+    console.log(
+      "[Unsubscribe]Client's subscriber map size: ",
+      this.socketMap.size
+    );
   }
 
   login(account: OicqAccount, password?: string) {
@@ -78,14 +92,13 @@ export default class OicqClient {
     }
   }
 
-  broadcast(action: WsAction, data?: any) {
-    const message = JSON.stringify({
-      action: action,
-      data: data,
-      state: this.state,
-    });
+  broadcast(wsResponse: WsResponse) {
+    if (wsResponse.data === undefined) {
+      wsResponse.data = {};
+    }
+    wsResponse.data.state = this.state;
     this.socketMap.forEach((socket) => {
-      socket.send(message);
+      socket.send(wsResponse);
     });
   }
 }
