@@ -13,6 +13,10 @@ class UserManager {
     ClientMapType
   >();
 
+  listClients({ userId }: WsConnection): OicqAccount[] {
+    return Array.from(this.userMap.get(userId)?.keys() ?? []);
+  }
+
   connectClient(wsConnection: WsConnection, account: OicqAccount): boolean {
     if (!this.userMap.has(wsConnection.userId)) {
       this.userMap.set(wsConnection.userId, new ClientMap());
@@ -25,11 +29,8 @@ class UserManager {
     return oicqClient.subscribe(wsConnection);
   }
 
-  removeClient(wsConnection: WsConnection, account: OicqAccount) {
-    const clientMap = this.userMap.get(wsConnection.userId);
-    if (clientMap !== undefined) {
-      clientMap.delete(account);
-    }
+  removeClient({ userId, wsId }: WsConnection, account: OicqAccount) {
+    this.userMap.get(userId)?.get(account)?.unsubscribe(wsId);
   }
 }
 

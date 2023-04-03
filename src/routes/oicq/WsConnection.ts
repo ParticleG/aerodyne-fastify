@@ -42,6 +42,7 @@ export default class WsConnection {
     });
 
     this.handlerMap.set(WsAction.Monitor, this.monitorHandler);
+    this.handlerMap.set(WsAction.List, this.listHandler);
     this.handlerMap.set(WsAction.Subscribe, this.subscribeHandler);
     this.handlerMap.set(WsAction.Login, this.loginHandler);
     this.handlerMap.set(WsAction.Message, this.messageHandler);
@@ -75,6 +76,12 @@ export default class WsConnection {
   private async monitorHandler(wsMessage: WsRequest) {
     this.respond(
       WsSuccessResponse.fromRequest(wsMessage, await getSystemInfo())
+    );
+  }
+
+  private async listHandler(wsMessage: WsRequest) {
+    this.respond(
+      WsSuccessResponse.fromRequest(wsMessage, UserManager.listClients(this))
     );
   }
 

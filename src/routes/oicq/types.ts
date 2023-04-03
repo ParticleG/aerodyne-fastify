@@ -4,12 +4,13 @@ type UUID = string;
 type WsResult = "success" | "failure" | "error";
 
 enum WsAction {
-  Invalid = -1,
-  Monitor,
-  Subscribe,
-  Login,
-  Logout,
-  Message,
+  Invalid = "Invalid",
+  Monitor = "Monitor",
+  List = "List",
+  Subscribe = "Subscribe",
+  Login = "Login",
+  Logout = "Logout",
+  Message = "Message",
 }
 
 enum ClientState {
@@ -21,32 +22,33 @@ enum ClientState {
   Online,
 }
 
-interface WsRequest {
+class WsRequest {
   action: WsAction;
   data: any;
-}
 
-interface WsResponse extends WsRequest {
-  result: WsResult;
-  message?: string;
-  reasons?: string[];
-}
-
-class WsResponse {
-  constructor(
-    result: WsResult,
-    action?: number,
-    data?: any,
-    message?: string,
-    reasons?: string[]
-  ) {
-    this.result = result;
+  constructor(action?: WsAction, data?: any) {
     if (action === undefined || !Object.values(WsAction).includes(action)) {
       this.action = WsAction.Invalid;
     } else {
       this.action = action;
     }
     this.data = data;
+  }
+}
+
+class WsResponse extends WsRequest {
+  result: WsResult;
+  message?: string;
+  reasons?: string[];
+  constructor(
+    result: WsResult,
+    action?: WsAction,
+    data?: any,
+    message?: string,
+    reasons?: string[]
+  ) {
+    super(action, data);
+    this.result = result;
     this.message = message;
     this.reasons = reasons;
   }
@@ -63,7 +65,7 @@ class WsResponse {
 }
 
 class WsSuccessResponse extends WsResponse {
-  constructor(action: number, data?: any) {
+  constructor(action: WsAction, data?: any) {
     super("success", action, data);
   }
 
@@ -73,7 +75,7 @@ class WsSuccessResponse extends WsResponse {
 }
 
 class WsFailureResponse extends WsResponse {
-  constructor(action: number, message?: string, reasons?: string[]) {
+  constructor(action: WsAction, message?: string, reasons?: string[]) {
     super("failure", action, undefined, message, reasons);
   }
 
@@ -83,7 +85,7 @@ class WsFailureResponse extends WsResponse {
 }
 
 class WsErrorResponse extends WsResponse {
-  constructor(action: number, message?: string, reasons?: string[]) {
+  constructor(action: WsAction, message?: string, reasons?: string[]) {
     super("error", action, undefined, message, reasons);
   }
 
