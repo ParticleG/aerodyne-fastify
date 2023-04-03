@@ -16,7 +16,7 @@ export default class OicqClient {
   private client: Client;
   state: ClientState;
   readonly account: OicqAccount;
-  private socketMap: Map<UUID, WsConnection> = new Map<UUID, WsConnection>();
+  private connectionMap: Map<UUID, WsConnection> = new Map<UUID, WsConnection>();
 
   constructor(platform: Platform, account: OicqAccount) {
     this.client = createClient({ log_level: "warn", platform: platform });
@@ -51,44 +51,58 @@ export default class OicqClient {
     });
   }
 
-  subscribe(wsConnection: WsConnection) {
+  subscribe(wsConnection: WsConnection): boolean {
+    const hasConnection = this.connectionMap.has(wsConnection.wsId);
+    this.connectionMap.set(wsConnection.wsId, wsConnection);
     wsConnection.subscribe(this);
-    this.socketMap.set(wsConnection.wsId, wsConnection);
     console.log(
       "[Subscribe]Client's subscriber map size: ",
-      this.socketMap.size
+      this.connectionMap.size
     );
+    return hasConnection;
   }
 
   unsubscribe(wsId: UUID) {
-    this.socketMap.delete(wsId);
+    this.connectionMap.delete(wsId);
     console.log(
       "[Unsubscribe]Client's subscriber map size: ",
-      this.socketMap.size
+      this.connectionMap.size
     );
   }
 
-  login(account: OicqAccount, password?: string) {
-    this.client.login(account, password).then();
-  }
-
-  postLogin(payload?: string) {
+  login(payload?: string) {
     switch (this.state) {
-      case ClientState.WaitingSmsCode:
+      case ClientState.Initializing: {
+        this.client.login(this.account, payload).then();
+        break;
+      }
+      case ClientState.WaitingSmsCode: {
         if (!payload) {
-          throw new Error("Missing Sms code");
+          throw new WsFailureResponse(WsAction.Login, "Missing sms code", [
+            JSON.stringify({ state: this.state }),
+          ]);
         }
         this.client.submitSmsCode(payload.trim());
         break;
-      case ClientState.WaitingQRCode:
+      }
+      case ClientState.WaitingQRCode: {
         this.client.login().then();
         break;
-      case ClientState.WaitingSlider:
+      }
+      case ClientState.WaitingSlider: {
         if (!payload) {
-          throw new Error("Missing login ticket");
+          throw new WsFailureResponse(WsAction.Login, "Missing login ticket", [
+            JSON.stringify({ state: this.state }),
+          ]);
         }
         this.client.submitSlider(payload.trim());
         break;
+      }
+      case ClientState.Online: {
+        throw new WsFailureResponse(WsAction.Login, "Already online", [
+          JSON.stringify({ state: this.state }),
+        ]);
+      }
     }
   }
 
@@ -97,8 +111,8 @@ export default class OicqClient {
       wsResponse.data = {};
     }
     wsResponse.data.state = this.state;
-    this.socketMap.forEach((socket) => {
-      socket.send(wsResponse);
+    this.connectionMap.forEach((connection) => {
+      connection.respond(wsResponse);
     });
   }
 }

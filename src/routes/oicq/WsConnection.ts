@@ -10,6 +10,7 @@ import {
   UserId,
   UUID,
   WsAction,
+  WsFailureResponse,
   WsRequest,
   WsResponse,
   WsSuccessResponse,
@@ -28,21 +29,21 @@ export default class WsConnection {
 
   constructor(userId: UserId, ws: WebSocket) {
     this.userId = userId;
-    ws.on("close", () => {
+    this.socket = ws;
+
+    this.socket.on("message", async (message) => {
+      await this.handleMessage(message);
+    });
+    this.socket.on("close", () => {
       this.clientMap.forEach((client) => {
         client?.unsubscribe(this.wsId);
       });
       console.log("[Close]Connection's client map size: ", this.clientMap.size);
     });
-    this.socket = ws;
-    this.socket.on("message", async (message) => {
-      await this.handleMessage(message);
-    });
 
     this.handlerMap.set(WsAction.Monitor, this.monitorHandler);
     this.handlerMap.set(WsAction.Subscribe, this.subscribeHandler);
     this.handlerMap.set(WsAction.Login, this.loginHandler);
-    this.handlerMap.set(WsAction.Validate, this.validateHandler);
     this.handlerMap.set(WsAction.Message, this.messageHandler);
   }
 
@@ -54,8 +55,12 @@ export default class WsConnection {
     );
   }
 
-  send(wsResponse: WsResponse) {
-    this.socket.send(wsResponse.toString());
+  respond(wsResponse: WsResponse) {
+    if (wsResponse.result === "error") {
+      this.socket.close(1011, wsResponse.toString());
+    } else {
+      this.socket.send(wsResponse.toString());
+    }
   }
 
   private async handleMessage(message: RawData) {
@@ -63,40 +68,46 @@ export default class WsConnection {
       const wsMessage = parseWsMessage(message.toString());
       await this.handlerMap.get(wsMessage.action)!.call(this, wsMessage);
     } catch (error: any) {
-      const wsResponse = error as WsResponse;
-      if (wsResponse.result === "error") {
-        this.socket.close(1011, wsResponse.toString());
-      } else {
-        this.socket.send(wsResponse.toString());
-      }
+      this.respond(error as WsResponse);
     }
   }
 
   private async monitorHandler(wsMessage: WsRequest) {
-    const wsResponse = WsSuccessResponse.fromRequest(wsMessage);
-    wsResponse.data = await getSystemInfo();
-    this.send(wsResponse);
+    this.respond(
+      WsSuccessResponse.fromRequest(wsMessage, await getSystemInfo())
+    );
   }
 
   private async subscribeHandler(wsMessage: WsRequest) {
-    const wsResponse = WsSuccessResponse.fromRequest(wsMessage);
     const { account } = wsMessage.data;
-    UserManager.connectClient(this, account);
-    this.send(wsResponse);
+    this.respond(
+      WsSuccessResponse.fromRequest(
+        wsMessage,
+        UserManager.connectClient(this, account)
+      )
+    );
   }
 
   private async loginHandler(wsMessage: WsRequest) {
-    const wsResponse = WsSuccessResponse.fromRequest(wsMessage);
-    this.send(wsResponse);
-  }
-
-  private async validateHandler(wsMessage: WsRequest) {
-    const wsResponse = WsSuccessResponse.fromRequest(wsMessage);
-    this.send(wsResponse);
+    const { account, payload } = wsMessage.data;
+    const client = this.clientMap.get(account);
+    if (client === undefined) {
+      this.respond(
+        WsFailureResponse.fromRequest(wsMessage, "Client not found", [
+          "Subscribe to the account first",
+        ])
+      );
+      return;
+    }
+    try {
+      client.login(payload);
+    } catch (error) {
+      this.respond(error as WsFailureResponse);
+    }
   }
 
   private async messageHandler(wsMessage: WsRequest) {
     const wsResponse = WsSuccessResponse.fromRequest(wsMessage);
-    this.send(wsResponse);
+    this.respond(wsResponse);
   }
 }

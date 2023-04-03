@@ -13,7 +13,7 @@ class UserManager {
     ClientMapType
   >();
 
-  connectClient(wsConnection: WsConnection, account: OicqAccount) {
+  connectClient(wsConnection: WsConnection, account: OicqAccount): boolean {
     if (!this.userMap.has(wsConnection.userId)) {
       this.userMap.set(wsConnection.userId, new ClientMap());
     }
@@ -22,7 +22,7 @@ class UserManager {
       clientMap.set(account, new OicqClient(Platform.Watch, account));
     }
     const oicqClient = clientMap.get(account)!;
-    oicqClient.subscribe(wsConnection);
+    return oicqClient.subscribe(wsConnection);
   }
 
   removeClient(wsConnection: WsConnection, account: OicqAccount) {

@@ -10,7 +10,7 @@ const oicq: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
       WsAction.Monitor,
       await getSystemInfo()
     );
-    wsConnection.send(wsResponse);
+    wsConnection.respond(wsResponse);
   });
 };
 

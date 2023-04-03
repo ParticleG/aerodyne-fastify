@@ -27,22 +27,14 @@ dataValidators[WsAction.Subscribe] = ajv.compile({
 }>);
 
 dataValidators[WsAction.Login] = ajv.compile({
-  optionalProperties: {
-    payload: { type: "string" },
-  },
-} as JTDSchemaType<{
-  payload: string | undefined;
-}>);
-
-dataValidators[WsAction.Validate] = ajv.compile({
   properties: {
-    type: { enum: ["qrcode", "sms", "slider"] },
+    account: { type: "uint32" },
   },
   optionalProperties: {
     payload: { type: "string" },
   },
 } as JTDSchemaType<{
-  type: "qrcode" | "sms" | "slider";
+  account: number;
   payload: string | undefined;
 }>);
 

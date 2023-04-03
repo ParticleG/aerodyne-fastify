@@ -8,7 +8,7 @@ enum WsAction {
   Monitor,
   Subscribe,
   Login,
-  Validate,
+  Logout,
   Message,
 }
 
