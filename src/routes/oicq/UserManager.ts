@@ -23,7 +23,7 @@ class UserManager {
     }
     const clientMap = this.userMap.get(wsConnection.userId)!;
     if (!clientMap.has(account)) {
-      clientMap.set(account, new OicqClient(Platform.Watch, account));
+      clientMap.set(account, new OicqClient(Platform.Android, account));
     }
     const oicqClient = clientMap.get(account)!;
     return oicqClient.subscribe(wsConnection);
