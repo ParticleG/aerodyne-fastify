@@ -1,4 +1,13 @@
+import { createClient } from "icqq";
 import { Client } from "icqq/lib/client";
+import { Platform } from "icqq/lib/core";
+import {
+  DiscussMessageEvent,
+  GroupMessageEvent,
+  PrivateMessageEvent,
+} from "icqq/lib/events";
+
+import WsConnection from "./WsConnection";
 import {
   ClientState,
   OicqAccount,
@@ -8,46 +17,70 @@ import {
   WsResponse,
   WsSuccessResponse,
 } from "./types";
-import { Platform } from "icqq/lib/core";
-import { createClient } from "icqq";
-import WsConnection from "./WsConnection";
 
 export default class OicqClient {
   private client: Client;
   state: ClientState;
   readonly account: OicqAccount;
-  private connectionMap: Map<UUID, WsConnection> = new Map<UUID, WsConnection>();
+  private connectionMap: Map<UUID, WsConnection> = new Map<
+    UUID,
+    WsConnection
+  >();
 
   constructor(platform: Platform, account: OicqAccount) {
     this.client = createClient({ log_level: "warn", platform: platform });
-    this.state = ClientState.Initializing;
+    this.state = ClientState.Offline;
     this.account = account;
 
-    this.client.on("message", (e: any) => {
-      console.log(e);
-      this.broadcast(new WsSuccessResponse(WsAction.Message, e));
+    this.client.on(
+      "message",
+      (
+        event: PrivateMessageEvent | GroupMessageEvent | DiscussMessageEvent
+      ) => {
+        this.broadcast(new WsSuccessResponse(WsAction.Message, event));
+      }
+    );
+
+    this.client.on(
+      "system.login.device",
+      (event: { url: string; phone: string }) => {
+        this.state = ClientState.WaitingSmsCode;
+        this.client.sendSmsCode();
+        this.broadcast(new WsSuccessResponse(WsAction.Login, event));
+      }
+    );
+    this.client.on("system.login.qrcode", (event: { image: Buffer }) => {
+      this.state = ClientState.WaitingQRCode;
+      this.broadcast(new WsSuccessResponse(WsAction.Login, event));
+    });
+    this.client.on("system.login.slider", (event: { url: string }) => {
+      this.state = ClientState.WaitingSlider;
+      this.broadcast(new WsSuccessResponse(WsAction.Login, event));
+    });
+    this.client.on("system.login.error", ({ code, message }) => {
+      this.state = ClientState.Offline;
+      this.broadcast(
+        new WsFailureResponse(WsAction.Login, message, [
+          JSON.stringify({ code: code }),
+        ])
+      );
     });
 
-    this.client.on("system.login.device", (e: any) => {
-      this.state = ClientState.WaitingSmsCode;
-      this.client.sendSmsCode();
-      this.broadcast(new WsSuccessResponse(WsAction.Login, e));
-    });
-    this.client.on("system.login.qrcode", (e: any) => {
-      this.state = ClientState.WaitingQRCode;
-      this.broadcast(new WsSuccessResponse(WsAction.Login, e));
-    });
-    this.client.on("system.login.slider", (e: any) => {
-      this.state = ClientState.WaitingSlider;
-      this.broadcast(new WsSuccessResponse(WsAction.Login, e));
-    });
     this.client.on("system.online", () => {
       this.state = ClientState.Online;
       this.broadcast(new WsSuccessResponse(WsAction.Login));
     });
-    this.client.on("system.login.error", (e: any) => {
-      this.state = ClientState.Initializing;
-      this.broadcast(new WsFailureResponse(WsAction.Login, e));
+    this.client.on("system.offline.kickoff", ({ message }) => {
+      this.state = ClientState.Offline;
+      this.broadcast(
+        new WsFailureResponse(WsAction.Logout, message, ["Kicked off"])
+      );
+    });
+    this.client.on("system.offline.network", ({ message }) => {
+      this.state = ClientState.Offline;
+      this.broadcast(
+        new WsFailureResponse(WsAction.Logout, message, ["Network"])
+      );
     });
   }
 
@@ -59,7 +92,7 @@ export default class OicqClient {
       "[Subscribe]Client's subscriber map size: ",
       this.connectionMap.size
     );
-    return hasConnection;
+    return !hasConnection;
   }
 
   unsubscribe(wsId: UUID) {
@@ -72,7 +105,7 @@ export default class OicqClient {
 
   login(payload?: string) {
     switch (this.state) {
-      case ClientState.Initializing: {
+      case ClientState.Offline: {
         this.client.login(this.account, payload).then();
         break;
       }
@@ -82,7 +115,7 @@ export default class OicqClient {
             JSON.stringify({ state: this.state }),
           ]);
         }
-        this.client.submitSmsCode(payload.trim());
+        this.client.submitSmsCode(payload.trim()).then();
         break;
       }
       case ClientState.WaitingQRCode: {
@@ -95,7 +128,7 @@ export default class OicqClient {
             JSON.stringify({ state: this.state }),
           ]);
         }
-        this.client.submitSlider(payload.trim());
+        this.client.submitSlider(payload.trim()).then();
         break;
       }
       case ClientState.Online: {

@@ -15,7 +15,7 @@ enum WsAction {
 
 enum ClientState {
   Null = -1,
-  Initializing,
+  Offline,
   WaitingSmsCode,
   WaitingQRCode,
   WaitingSlider,

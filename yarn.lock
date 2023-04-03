@@ -1474,10 +1474,10 @@ iconv-lite@^0.4.4:
   dependencies:
     safer-buffer ">= 2.1.2 < 3"
 
-icqq@^0.0.32:
-  version "0.0.32"
-  resolved "https://registry.yarnpkg.com/icqq/-/icqq-0.0.32.tgz#b032c007530a79b79593021850aa845c24eeceb8"
-  integrity sha512-SvuspF11vpLk411G2pkQhnt1uV7q/qtbUup44IwsoFOzesXBKKEvWrd7fqU2uMhA86cJQdUG/iyt9C2s1DNhtg==
+icqq@^0.0.37:
+  version "0.0.37"
+  resolved "https://registry.npmjs.org/icqq/-/icqq-0.0.37.tgz#c228aa807869a025af886422b3f2f3c41547307d"
+  integrity sha512-JzxJ0kb5H/m0WpVAZoOAnU2rlcYilaFwVjrIG/naguEW0/muNi++LCOX1Fyzvu+Mh2k8atWz9qwB3hlvdB5j4g==
   dependencies:
     axios "^1.1.2"
     lodash "^4.17.21"
