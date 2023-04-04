@@ -1,8 +1,11 @@
 {
-  "extends": "fastify-tsconfig",
-  "compilerOptions": {
-    "outDir": "dist",
-    "sourceMap": true
-  },
-  "include": ["src/**/*.ts"]
+    "extends": "fastify-tsconfig",
+    "compilerOptions": {
+        "outDir": "dist",
+        "sourceMap": true,
+        "target": "es2022",
+    },
+    "include": [
+        "src/**/*.ts"
+    ]
 }

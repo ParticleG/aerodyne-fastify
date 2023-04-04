@@ -12,14 +12,14 @@ if (!vapidKeys.publicKey || !vapidKeys.privateKey) {
     "Invalid VAPID_PUBLIC_KEY or VAPID_PRIVATE_KEY, you can use this generate one:"
   );
   console.log(webPush.generateVAPIDKeys());
-  process.exit(1);
+  // process.exit(1);
 }
 
-webPush.setVapidDetails(
-  "mailto:particle_g@outlook.com",
-  vapidKeys.publicKey,
-  vapidKeys.privateKey
-);
+// webPush.setVapidDetails(
+//   "mailto:particle_g@outlook.com",
+//   vapidKeys.publicKey,
+//   vapidKeys.privateKey
+// );
 
 const service: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
   fastify.get("/key", async (request, reply) => {

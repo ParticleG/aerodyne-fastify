@@ -1,41 +1,47 @@
-// Read the .env file.
-import * as dotenv from "dotenv";
-// Require the framework
+import * as closeWithGrace from "close-with-grace";
 import Fastify from "fastify";
 
-// Require library to exit fastify process, gracefully (if possible)
-import * as closeWithGrace from "close-with-grace";
-
-dotenv.config();
+declare module "fastify" {
+  interface FastifyInstance {
+    config: {
+      NODE_ENV: string;
+    };
+  }
+}
 
 // Instantiate Fastify with some config
-const app = Fastify({
+const fastify = Fastify({
   logger: true,
 });
 
-// Register your application as a normal plugin.
-app.register(import("./app"));
+fastify.register(import("./app")).ready(() => {
+  console.log(fastify.config);
+  const closeListeners = closeWithGrace(
+    { delay: parseInt(process.env.FASTIFY_CLOSE_GRACE_DELAY ?? "500") },
+    async function ({ signal, err, manual }) {
+      if (err) {
+        fastify.log.error(err);
+      }
+      await fastify.close();
+    } satisfies closeWithGrace.CloseWithGraceAsyncCallback
+  );
 
-// delay is the number of milliseconds for the graceful close to finish
-const closeListeners = closeWithGrace(
-  { delay: parseInt(process.env.FASTIFY_CLOSE_GRACE_DELAY ?? "500") },
-  async function ({ signal, err, manual }) {
-    if (err) {
-      app.log.error(err);
+  fastify.addHook("onClose", async (instance, done) => {
+    closeListeners.uninstall();
+    done();
+  });
+
+  // Start listening.
+  fastify.listen(
+    {
+      host: process.env.FASTIFY_LISTENING_HOST ?? "localhost",
+      port: parseInt(process.env.FASTIFY_LISTENING_PORT ?? "3000"),
+    },
+    (err: any) => {
+      if (err) {
+        fastify.log.error(err);
+        process.exit(1);
+      }
     }
-    await app.close();
-  } satisfies closeWithGrace.CloseWithGraceAsyncCallback
-);
-
-app.addHook("onClose", async (instance, done) => {
-  closeListeners.uninstall();
-  done();
-});
-
-// Start listening.
-app.listen({ port: parseInt(process.env.PORT ?? "3000") }, (err: any) => {
-  if (err) {
-    app.log.error(err);
-    process.exit(1);
-  }
+  );
 });
