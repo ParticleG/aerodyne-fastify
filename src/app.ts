@@ -1,8 +1,8 @@
-import cors from "@fastify/cors";
-import { join } from "path";
 import { FastifyPluginAsync } from "fastify";
 import AutoLoad, { AutoloadPluginOptions } from "@fastify/autoload";
+import cors from "@fastify/cors";
 import websocket from "@fastify/websocket";
+import { join } from "path";
 
 export type AppOptions = {
   // Place your custom options for app below here.
