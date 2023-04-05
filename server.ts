@@ -1,4 +1,5 @@
 import { ErrorObject } from "ajv/lib/types";
+import chalk from "chalk";
 import closeWithGrace from "close-with-grace";
 import Fastify from "fastify";
 import * as webPush from "web-push";
@@ -6,7 +7,7 @@ import cors from "@fastify/cors";
 import websocket from "@fastify/websocket";
 
 const fastify = Fastify({
-  logger: true,
+  logger: false,
 });
 
 async function main() {
@@ -20,9 +21,9 @@ async function main() {
       console.log(reply);
     },
   });
-  fastify.register(import("./app"), fastify.config);
+  fastify.register(import("./src/app"), fastify.config);
   const closeListeners = closeWithGrace(
-    { delay: fastify.config.FASTIFY_CLOSE_GRACE_DELAY },
+    { delay: fastify.config.server.close_delay },
     async function ({ signal, err, manual }) {
       if (err) {
         fastify.log.error(err);
@@ -39,8 +40,8 @@ async function main() {
   // Start listening.
   fastify.listen(
     {
-      host: fastify.config.FASTIFY_LISTENING_HOST,
-      port: fastify.config.FASTIFY_LISTENING_PORT,
+      host: fastify.config.server.host,
+      port: fastify.config.server.port,
     },
     (err: any) => {
       if (err) {
@@ -51,26 +52,29 @@ async function main() {
   );
 }
 
-main().catch(({ errors }) => {
-  let noVapidKeys = false;
-  console.log(errors);
-  errors.map((error: ErrorObject) => {
-    if (
-      error.instancePath === "/VAPID_PRIVATE_KEY" ||
-      error.instancePath === "/VAPID_PUBLIC_KEY"
-    ) {
-      noVapidKeys = true;
-    }
-    return ".env config error: " + error.message + " at " + error.instancePath;
-  });
-  if (noVapidKeys) {
-    console.warn(
-      "Invalid VAPID_PUBLIC_KEY or VAPID_PRIVATE_KEY, you can use this generate one:",
-      webPush.generateVAPIDKeys()
-    );
+main().catch((errors) => {
+  if (errors instanceof Array<ErrorObject>) {
+    errors = errors.map((error: ErrorObject, index) => {
+      if (
+        error.instancePath === "/vapid/private_key" ||
+        error.instancePath === "/vapid/public_key"
+      ) {
+        return (
+          chalk.red("[Config]") +
+          `Config error: ` +
+          chalk.yellow(`"${error.message}"`) +
+          ` at ` +
+          chalk.blue.underline(error.instancePath) +
+          `, you can use this generate one: ` +
+          chalk.green(JSON.stringify(webPush.generateVAPIDKeys(), undefined, 2))
+        );
+      }
+      return `Config error[${index}]: "${error.message}" at ${error.instancePath}`;
+    });
   }
+  console.log(errors.join("\n"));
   fastify.close().then(
-    () => console.log("Server successfully closed"),
-    (err) => console.log("Server cannot close dur to an error: ", err)
+    () => console.log(chalk.green("Server successfully closed")),
+    (err) => console.log(chalk.red("Server cannot close dur to an error: ", err))
   );
 });
