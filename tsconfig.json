@@ -1,11 +1,13 @@
 {
     "extends": "fastify-tsconfig",
     "compilerOptions": {
+        "esModuleInterop": true,
         "outDir": "dist",
         "sourceMap": true,
-        "target": "es2022",
+        "target": "es2022"
     },
     "include": [
+        "server.ts",
         "src/**/*.ts"
     ]
 }

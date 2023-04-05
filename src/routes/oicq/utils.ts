@@ -1,25 +1,26 @@
-import Ajv, { JTDSchemaType, ValidateFunction } from "ajv/dist/jtd";
+import Ajv, { JTDSchemaType } from "ajv/dist/jtd";
 import { cpu, mem, os } from "node-os-utils";
 
-import { WsAction, WsFailureResponse, WsRequest } from "./types";
+import {
+  ValidatorMap,
+  ValidatorMapType,
+  WsAction,
+  WsFailureResponse,
+  WsRequest,
+} from "./types";
 
 const ajv = new Ajv();
 
-const WsMessageSchema: JTDSchemaType<WsRequest> = {
+const WsMessageParser = ajv.compileParser({
   properties: {
     action: {
       enum: Object.values(WsAction),
     },
   },
   optionalProperties: { data: {} },
-};
+} as JTDSchemaType<WsRequest>);
 
-const WsMessageParser = ajv.compileParser(WsMessageSchema);
-
-const dataValidators: Map<WsAction, ValidateFunction> = new Map<
-  WsAction,
-  ValidateFunction
->();
+const dataValidators: ValidatorMapType = new ValidatorMap();
 
 dataValidators.set(WsAction.Invalid, ajv.compile({} as JTDSchemaType<null>));
 dataValidators.set(WsAction.Monitor, ajv.compile({} as JTDSchemaType<null>));

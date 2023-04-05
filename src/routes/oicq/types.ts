@@ -1,6 +1,9 @@
-type UserId = number;
+import { ValidateFunction } from "ajv/dist/jtd";
+
 type OicqAccount = number;
+type UserId = number;
 type UUID = string;
+type ValidatorMapType = Map<WsAction, ValidateFunction>;
 type WsResult = "success" | "failure" | "error";
 
 enum WsAction {
@@ -22,6 +25,8 @@ enum ClientState {
   Online,
 }
 
+class ValidatorMap extends Map<WsAction, ValidateFunction> {}
+
 class WsRequest {
   action: WsAction;
   data: any;
@@ -38,19 +43,10 @@ class WsRequest {
 
 class WsResponse extends WsRequest {
   result: WsResult;
-  message?: string;
-  reasons?: string[];
-  constructor(
-    result: WsResult,
-    action?: WsAction,
-    data?: any,
-    message?: string,
-    reasons?: string[]
-  ) {
+
+  constructor(result: WsResult, action?: WsAction, data?: any) {
     super(action, data);
     this.result = result;
-    this.message = message;
-    this.reasons = reasons;
   }
 
   toString() {
@@ -58,8 +54,6 @@ class WsResponse extends WsRequest {
       result: this.result,
       action: this.action,
       data: this.data,
-      message: this.message,
-      reasons: this.reasons,
     });
   }
 }
@@ -75,8 +69,17 @@ class WsSuccessResponse extends WsResponse {
 }
 
 class WsFailureResponse extends WsResponse {
+  data: {
+    message: string;
+    reasons?: string[];
+  };
+
   constructor(action: WsAction, message?: string, reasons?: string[]) {
-    super("failure", action, undefined, message, reasons);
+    super("failure", action);
+    this.data = {
+      message: message || "Unknown error",
+      reasons: reasons,
+    };
   }
 
   static fromRequest(request: WsRequest, message?: string, reasons?: string[]) {
@@ -85,8 +88,16 @@ class WsFailureResponse extends WsResponse {
 }
 
 class WsErrorResponse extends WsResponse {
+  data: {
+    message: string;
+    reasons?: string[];
+  };
   constructor(action: WsAction, message?: string, reasons?: string[]) {
-    super("error", action, undefined, message, reasons);
+    super("error", action);
+    this.data = {
+      message: message || "Unknown error",
+      reasons: reasons,
+    };
   }
 
   static fromRequest(request: WsRequest, message?: string, reasons?: string[]) {
@@ -95,11 +106,13 @@ class WsErrorResponse extends WsResponse {
 }
 
 export {
-  UserId,
   OicqAccount,
+  UserId,
   UUID,
+  ValidatorMapType,
   WsAction,
   ClientState,
+  ValidatorMap,
   WsRequest,
   WsResponse,
   WsSuccessResponse,
