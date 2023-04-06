@@ -6,7 +6,7 @@ This project was bootstrapped with Fastify-CLI.
 
 In the project directory, you can run:
 
-### `yarn build:ts`
+### `yarn run build`
 
 Compile the typescript application
 
@@ -18,10 +18,6 @@ Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
 ### `yarn start`
 
 For production mode
-
-### `yarn test`
-
-Run the test cases.
 
 ## Learn More
 

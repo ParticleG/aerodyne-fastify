@@ -1,6 +1,5 @@
 import { ErrorObject } from "ajv/lib/types";
 import * as chalk from "chalk";
-import * as closeWithGrace from "close-with-grace";
 import Fastify from "fastify";
 import cors from "@fastify/cors";
 import websocket from "@fastify/websocket";
@@ -10,43 +9,27 @@ import { Logger } from "./src/utils";
 
 const fastify = Fastify({
   logger: {
-    level: "warn",
-  },
+    level: "warn"
+  }
 });
 
 async function main() {
   await fastify.register(import("./config"));
   await fastify.register(cors, {});
   await fastify.register(websocket, {
-    errorHandler: function (error, conn, req, reply) {
+    errorHandler: function(error, conn, req, reply) {
       console.log(error);
       console.log(conn);
       console.log(req);
       console.log(reply);
-    },
+    }
   });
   fastify.register(import("./src/app"), fastify.config);
-  const closeListeners = closeWithGrace(
-    { delay: fastify.config.server.close_delay },
-    async function ({ signal, err, manual }) {
-      console.log(signal);
-      console.log(manual);
-      if (err) {
-        fastify.log.error(err);
-      }
-      await fastify.close();
-    } satisfies closeWithGrace.CloseWithGraceAsyncCallback
-  );
-
-  fastify.addHook("onClose", async (instance, done) => {
-    closeListeners.uninstall();
-    done();
-  });
 
   fastify.listen(
     {
       host: fastify.config.server.host,
-      port: fastify.config.server.port,
+      port: fastify.config.server.port
     },
     (err: any) => {
       if (err) {
@@ -75,9 +58,9 @@ main().catch((errors) => {
           "Invalid config item",
           reason,
           "Use these generated keys in config file: " +
-            chalk.green(
-              JSON.stringify(webPush.generateVAPIDKeys(), undefined, 2)
-            )
+          chalk.green(
+            JSON.stringify(webPush.generateVAPIDKeys(), undefined, 2)
+          )
         );
       }
       Logger.error(module, "Invalid config item", reason);
