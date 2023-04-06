@@ -1,13 +1,17 @@
 import { ErrorObject } from "ajv/lib/types";
-import chalk from "chalk";
-import closeWithGrace from "close-with-grace";
+import * as chalk from "chalk";
+import * as closeWithGrace from "close-with-grace";
 import Fastify from "fastify";
-import * as webPush from "web-push";
 import cors from "@fastify/cors";
 import websocket from "@fastify/websocket";
+import * as webPush from "web-push";
+
+import { Logger } from "./src/utils";
 
 const fastify = Fastify({
-  logger: false,
+  logger: {
+    level: "warn",
+  },
 });
 
 async function main() {
@@ -25,6 +29,8 @@ async function main() {
   const closeListeners = closeWithGrace(
     { delay: fastify.config.server.close_delay },
     async function ({ signal, err, manual }) {
+      console.log(signal);
+      console.log(manual);
       if (err) {
         fastify.log.error(err);
       }
@@ -37,7 +43,6 @@ async function main() {
     done();
   });
 
-  // Start listening.
   fastify.listen(
     {
       host: fastify.config.server.host,
@@ -54,27 +59,34 @@ async function main() {
 
 main().catch((errors) => {
   if (errors instanceof Array<ErrorObject>) {
-    errors = errors.map((error: ErrorObject, index) => {
+    errors.forEach((error: ErrorObject) => {
+      const module = "Config";
+      const reason =
+        chalk.yellow(`${error.message}`) +
+        (error.instancePath
+          ? " at " + chalk.blue.underline(error.instancePath)
+          : "");
       if (
         error.instancePath === "/vapid/private_key" ||
         error.instancePath === "/vapid/public_key"
       ) {
-        return (
-          chalk.red("[Config]") +
-          `Config error: ` +
-          chalk.yellow(`"${error.message}"`) +
-          ` at ` +
-          chalk.blue.underline(error.instancePath) +
-          `, you can use this generate one: ` +
-          chalk.green(JSON.stringify(webPush.generateVAPIDKeys(), undefined, 2))
+        Logger.error(
+          module,
+          "Invalid config item",
+          reason,
+          "Use these generated keys in config file: " +
+            chalk.green(
+              JSON.stringify(webPush.generateVAPIDKeys(), undefined, 2)
+            )
         );
       }
-      return `Config error[${index}]: "${error.message}" at ${error.instancePath}`;
+      Logger.error(module, "Invalid config item", reason);
     });
+  } else {
+    console.log(errors.join("\n"));
   }
-  console.log(errors.join("\n"));
   fastify.close().then(
-    () => console.log(chalk.green("Server successfully closed")),
-    (err) => console.log(chalk.red("Server cannot close dur to an error: ", err))
+    () => Logger.success("Server", "Successfully closed"),
+    (err) => Logger.error("Server", "Cannot close", err.message)
   );
 });

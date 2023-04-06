@@ -16,7 +16,7 @@ import {
   WsFailureResponse,
   WsResponse,
   WsSuccessResponse,
-} from "./types";
+} from "../../types";
 
 export default class OicqClient {
   private client: Client;
@@ -59,6 +59,7 @@ export default class OicqClient {
     });
     this.client.on("system.login.error", ({ code, message }) => {
       this.state = ClientState.Offline;
+
       this.broadcast(
         new WsFailureResponse(WsAction.Login, message, [
           JSON.stringify({ code: code }),

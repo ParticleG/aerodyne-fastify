@@ -1,10 +1,12 @@
+import * as chalk from "chalk";
 import { mkdirSync, readdirSync } from "fs";
 import { Platform } from "icqq";
 import { join, resolve } from "path";
 
 import OicqClient from "./OicqClient";
 import WsConnection from "./WsConnection";
-import { OicqAccount, UserId } from "./types";
+import { OicqAccount, UserId } from "../../types";
+import { Logger } from "../../utils";
 
 type ClientMapType = Map<OicqAccount, OicqClient>;
 type UserMapType = Map<UserId, ClientMapType>;
@@ -17,8 +19,11 @@ class UserManager {
   private userMap: UserMapType = new UserMap();
 
   constructor() {
-    const dataDir = resolve(join(require?.main?.path || process.cwd(), "data"));
-    console.info(`[UserManager] Scanning client tokens in "${dataDir}".`);
+    const dataDir = resolve(join(process.cwd(), "data"));
+    Logger.info(
+      "UserManager",
+      "Scanning client tokens in " + chalk.underline(`"${dataDir}"`)
+    );
     try {
       const accounts = readdirSync(dataDir)
         .filter((file) => {
@@ -28,15 +33,15 @@ class UserManager {
           return file.substring(0, file.length - 6);
         });
       if (accounts.length > 0) {
-        console.info("[UserManager] Auto login for these accounts: ");
-        accounts.forEach((account) => {
-          console.info(`[UserManager]   ${account}`);
-        });
+        Logger.info(
+          "UserManager",
+          "Auto login for these accounts: \n\t" + accounts.join("\n\t")
+        );
       } else {
-        console.info("[UserManager] No account found");
+        Logger.hint("UserManager", "No account found");
       }
     } catch (_) {
-      console.info("[UserManager] Data directory not found, create one.");
+      Logger.warn("UserManager", "Data directory not found, create one");
       mkdirSync(dataDir);
     }
   }

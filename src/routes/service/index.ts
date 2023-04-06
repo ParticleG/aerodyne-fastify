@@ -2,28 +2,14 @@ import { FastifyPluginAsync } from "fastify";
 import * as webPush from "web-push";
 import { subscribeSchema } from "./schema";
 
-const vapidKeys = {
-  publicKey: process.env.VAPID_PUBLIC_KEY,
-  privateKey: process.env.VAPID_PRIVATE_KEY,
-};
-
-if (!vapidKeys.publicKey || !vapidKeys.privateKey) {
-  console.warn(
-    "Invalid VAPID_PUBLIC_KEY or VAPID_PRIVATE_KEY, you can use this generate one:"
-  );
-  console.log(webPush.generateVAPIDKeys());
-  // process.exit(1);
-}
-
-// webPush.setVapidDetails(
-//   "mailto:particle_g@outlook.com",
-//   vapidKeys.publicKey,
-//   vapidKeys.privateKey
-// );
-
 const service: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
+  webPush.setVapidDetails(
+    "mailto:particle_g@outlook.com",
+    fastify.config.vapid.public_key,
+    fastify.config.vapid.private_key
+  );
   fastify.get("/key", async (request, reply) => {
-    return { data: vapidKeys.publicKey };
+    return { data: fastify.config.vapid.public_key };
   });
   fastify.post(
     "/subscribe",

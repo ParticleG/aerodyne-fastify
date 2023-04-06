@@ -4,7 +4,7 @@ import { RawData, WebSocket } from "ws";
 import OicqClient from "./OicqClient";
 import UserManager from "./UserManager";
 
-import { getSystemInfo, parseWsMessage } from "./utils";
+import { getSystemInfo, parseWsMessage } from "../../utils";
 import {
   OicqAccount,
   UserId,
@@ -14,7 +14,7 @@ import {
   WsRequest,
   WsResponse,
   WsSuccessResponse,
-} from "./types";
+} from "../../types";
 
 type MessageHandler = (wsMessage: WsRequest) => Promise<void>;
 type ClientMap = Map<OicqAccount, OicqClient | undefined>;
