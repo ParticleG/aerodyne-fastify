@@ -1,4 +1,4 @@
-# Getting Started with [Fastify-CLI](https://www.npmjs.com/package/fastify-cli)
+# Aerodyne(aerodyne-fastify)
 
 This project was bootstrapped with Fastify-CLI.
 
@@ -6,16 +6,16 @@ This project was bootstrapped with Fastify-CLI.
 
 In the project directory, you can run:
 
-### `yarn run build`
+### `pnpm run build`
 
 Compile the typescript application
 
-### `yarn run dev`
+### `pnpm run dev`
 
 To start the app in dev mode.\
 Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
 
-### `yarn start`
+### `pnpm start`
 
 For production mode
 
