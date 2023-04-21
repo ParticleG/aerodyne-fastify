@@ -14,9 +14,10 @@ type ConfigType = {
     port: number;
   };
   vapid: {
+    email: string;
     private_key: string;
     public_key: string;
-  }
+  };
 };
 
 const validate = ajv.compile({
@@ -43,13 +44,16 @@ const validate = ajv.compile({
           default: 3000,
           minimum: 0,
           maximum: 65535,
-        }
-      }
+        },
+      },
     },
     vapid: {
       type: "object",
       required: ["private_key", "public_key"],
       properties: {
+        email: {
+          type: "string",
+        },
         private_key: {
           type: "string",
           minLength: 43,
@@ -57,9 +61,9 @@ const validate = ajv.compile({
         public_key: {
           type: "string",
           minLength: 87,
-        }
-      }
-    }
+        },
+      },
+    },
   },
 });
 
@@ -76,6 +80,7 @@ export default fastifyPlugin(async (fastify) => {
 });
 
 declare module "fastify" {
+  // noinspection JSUnusedGlobalSymbols
   interface FastifyInstance {
     config: ConfigType;
   }

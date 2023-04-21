@@ -13,6 +13,9 @@ dependencies:
   '@fastify/websocket':
     specifier: 7.2.0
     version: 7.2.0
+  ajv:
+    specifier: ^8.12.0
+    version: 8.12.0
   chalk:
     specifier: ^4
     version: 4.0.0
