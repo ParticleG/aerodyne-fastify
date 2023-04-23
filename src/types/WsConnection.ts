@@ -3,15 +3,14 @@ import { RawData, WebSocket } from "ws";
 
 import OicqClient from "./OicqClient";
 import UserManager from "./UserManager";
-
-import { getSystemInfo } from "../../utils";
-import { WsRequest } from "../../types/WsRequest";
-import { OicqAccount, UserId, WsId } from "../../types/common";
-import { WsAction } from "../../types/WsAction";
-import { WsResponse } from "../../types/WsResponse";
-import { parseWsMessage } from "../../utils/validator";
-import { WsSuccessResponse } from "../../types/WsSuccessResponse";
-import { WsFailureResponse } from "../../types/WsFailureResponse";
+import { OicqAccount, UserId, WsId } from "./common";
+import { WsRequest } from "./WsRequest";
+import { WsAction } from "./WsAction";
+import { WsResponse } from "./WsResponse";
+import { parseWsMessage } from "../utils/validator";
+import { WsSuccessResponse } from "./WsSuccessResponse";
+import { getSystemInfo } from "../utils";
+import { WsFailureResponse } from "./WsFailureResponse";
 
 type MessageHandler = (wsMessage: WsRequest) => Promise<void>;
 type ClientMap = Map<OicqAccount, OicqClient | undefined>;

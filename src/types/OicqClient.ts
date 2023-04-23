@@ -8,14 +8,13 @@ import {
 } from "icqq/lib/events";
 
 import WsConnection from "./WsConnection";
-
-import { OicqAccount, WsId } from "../../types/common";
-import { ClientState } from "../../types/ClientState";
-import { WsSuccessResponse } from "../../types/WsSuccessResponse";
-import { WsAction } from "../../types/WsAction";
-import { WsFailureResponse } from "../../types/WsFailureResponse";
-import { WsResponse } from "../../types/WsResponse";
-import { md5 } from "../../utils";
+import { OicqAccount, WsId } from "./common";
+import { ClientState } from "./ClientState";
+import { WsSuccessResponse } from "./WsSuccessResponse";
+import { WsAction } from "./WsAction";
+import { WsFailureResponse } from "./WsFailureResponse";
+import { md5 } from "../utils";
+import { WsResponse } from "./WsResponse";
 
 export default class OicqClient {
   readonly account: OicqAccount;
