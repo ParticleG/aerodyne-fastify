@@ -4,24 +4,21 @@ import { RawData, WebSocket } from "ws";
 import OicqClient from "./OicqClient";
 import UserManager from "./UserManager";
 
-import { getSystemInfo, parseWsMessage } from "../../utils";
-import {
-  OicqAccount,
-  UserId,
-  UUID,
-  WsAction,
-  WsFailureResponse,
-  WsRequest,
-  WsResponse,
-  WsSuccessResponse,
-} from "../../types";
+import { getSystemInfo } from "../../utils";
+import { WsRequest } from "../../types/WsRequest";
+import { OicqAccount, UserId, WsId } from "../../types/common";
+import { WsAction } from "../../types/WsAction";
+import { WsResponse } from "../../types/WsResponse";
+import { parseWsMessage } from "../../utils/validator";
+import { WsSuccessResponse } from "../../types/WsSuccessResponse";
+import { WsFailureResponse } from "../../types/WsFailureResponse";
 
 type MessageHandler = (wsMessage: WsRequest) => Promise<void>;
 type ClientMap = Map<OicqAccount, OicqClient | undefined>;
 type HandlerMap = Map<WsAction, MessageHandler>;
 
 export default class WsConnection {
-  readonly wsId: UUID = uuid();
+  readonly wsId: WsId = uuid();
   userId: UserId;
   private socket: WebSocket;
   private clientMap: ClientMap = new Map<OicqAccount, OicqClient | undefined>();
@@ -86,13 +83,17 @@ export default class WsConnection {
   }
 
   private async subscribeHandler(wsMessage: WsRequest) {
-    const { account } = wsMessage.data;
-    this.respond(
-      WsSuccessResponse.fromRequest(
-        wsMessage,
-        UserManager.connectClient(this, account)
-      )
-    );
+    const { account, password } = wsMessage.data;
+    const result = UserManager.connectClient(this, account, password);
+    if (result) {
+      this.respond(WsSuccessResponse.fromRequest(wsMessage));
+    } else {
+      this.respond(
+        WsFailureResponse.fromRequest(wsMessage, "Validate failed", [
+          "Please check the account",
+        ])
+      );
+    }
   }
 
   private async loginHandler(wsMessage: WsRequest) {

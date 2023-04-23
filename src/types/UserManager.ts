@@ -5,18 +5,15 @@ import { join, resolve } from "path";
 
 import OicqClient from "./OicqClient";
 import WsConnection from "./WsConnection";
-import { OicqAccount, UserId } from "../../types";
-import { Logger } from "../../utils";
+import { OicqAccount } from "../../types/common";
+import { Logger } from "../../types/Logger";
 
 type ClientMapType = Map<OicqAccount, OicqClient>;
-type UserMapType = Map<UserId, ClientMapType>;
 
 class ClientMap extends Map<OicqAccount, OicqClient> {}
 
-class UserMap extends Map<UserId, ClientMapType> {}
-
 class UserManager {
-  private userMap: UserMapType = new UserMap();
+  private clientMap: ClientMapType = new ClientMap();
 
   constructor() {
     const dataDir = resolve(join(process.cwd(), "data"));
@@ -47,23 +44,23 @@ class UserManager {
   }
 
   listClients({ userId }: WsConnection): OicqAccount[] {
-    return Array.from(this.userMap.get(userId)?.keys() ?? []);
+    return Array.from(this.clientMap.keys() ?? []);
   }
 
-  connectClient(wsConnection: WsConnection, account: OicqAccount): boolean {
-    if (!this.userMap.has(wsConnection.userId)) {
-      this.userMap.set(wsConnection.userId, new ClientMap());
+  connectClient(
+    wsConnection: WsConnection,
+    account: OicqAccount,
+    password?: string
+  ): boolean {
+    if (!this.clientMap.has(account)) {
+      this.clientMap.set(account, new OicqClient(Platform.Android, account));
     }
-    const clientMap = this.userMap.get(wsConnection.userId)!;
-    if (!clientMap.has(account)) {
-      clientMap.set(account, new OicqClient(Platform.Android, account));
-    }
-    const oicqClient = clientMap.get(account)!;
-    return oicqClient.subscribe(wsConnection);
+    const oicqClient = this.clientMap.get(account)!;
+    return oicqClient.subscribe(wsConnection, password);
   }
 
-  removeClient({ userId, wsId }: WsConnection, account: OicqAccount) {
-    this.userMap.get(userId)?.get(account)?.unsubscribe(wsId);
+  removeClient({ wsId }: WsConnection, account: OicqAccount) {
+    this.clientMap.get(account)?.unsubscribe(wsId);
   }
 }
 

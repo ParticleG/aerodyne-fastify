@@ -8,28 +8,28 @@ import {
 } from "icqq/lib/events";
 
 import WsConnection from "./WsConnection";
-import {
-  ClientState,
-  OicqAccount,
-  UUID,
-  WsAction,
-  WsFailureResponse,
-  WsResponse,
-  WsSuccessResponse,
-} from "../../types";
+
+import { OicqAccount, WsId } from "../../types/common";
+import { ClientState } from "../../types/ClientState";
+import { WsSuccessResponse } from "../../types/WsSuccessResponse";
+import { WsAction } from "../../types/WsAction";
+import { WsFailureResponse } from "../../types/WsFailureResponse";
+import { WsResponse } from "../../types/WsResponse";
+import { md5 } from "../../utils";
 
 export default class OicqClient {
-  private client: Client;
-  state: ClientState;
   readonly account: OicqAccount;
-  private connectionMap: Map<UUID, WsConnection> = new Map<
-    UUID,
+  state: ClientState;
+  private client: Client;
+  private passwordHash?: string;
+  private connectionMap: Map<WsId, WsConnection> = new Map<
+    WsId,
     WsConnection
   >();
 
   constructor(platform: Platform, account: OicqAccount) {
     this.client = createClient({ log_level: "warn", platform: platform });
-    this.state = ClientState.Offline;
+    this.state = ClientState.Initializing;
     this.account = account;
 
     this.client.on(
@@ -85,18 +85,27 @@ export default class OicqClient {
     });
   }
 
-  subscribe(wsConnection: WsConnection): boolean {
-    const hasConnection = this.connectionMap.has(wsConnection.wsId);
-    this.connectionMap.set(wsConnection.wsId, wsConnection);
-    wsConnection.subscribe(this);
-    console.log(
-      "[Subscribe]Client's subscriber map size: ",
-      this.connectionMap.size
-    );
-    return !hasConnection;
+  validate(wsConnection: WsConnection, password: string = ""): boolean {
+    if (this.state === ClientState.Initializing) {
+      return true;
+    }
+    return md5(password) === this.passwordHash;
   }
 
-  unsubscribe(wsId: UUID) {
+  subscribe(wsConnection: WsConnection, password?: string): boolean {
+    this.connectionMap.set(wsConnection.wsId, wsConnection);
+    if (this.validate(wsConnection, password)) {
+      wsConnection.subscribe(this);
+      console.log(
+        "[Subscribe]Client's subscriber map size: ",
+        this.connectionMap.size
+      );
+      return true;
+    }
+    return false;
+  }
+
+  unsubscribe(wsId: WsId) {
     this.connectionMap.delete(wsId);
     console.log(
       "[Unsubscribe]Client's subscriber map size: ",
@@ -106,8 +115,14 @@ export default class OicqClient {
 
   login(payload?: string) {
     switch (this.state) {
-      case ClientState.Offline: {
+      case ClientState.Initializing: {
+        if (!payload) {
+          throw new WsFailureResponse(WsAction.Login, "Missing password", [
+            JSON.stringify({ state: this.state }),
+          ]);
+        }
         this.client.login(this.account, payload).then();
+        this.passwordHash = md5(payload);
         break;
       }
       case ClientState.WaitingSmsCode: {
