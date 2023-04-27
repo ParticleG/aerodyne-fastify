@@ -1,6 +1,6 @@
-import { WsResponse } from "./WsResponse";
-import { WsAction } from "./WsAction";
-import { WsRequest } from "./WsRequest";
+import { WsResponse } from './WsResponse';
+import { WsAction } from './WsAction';
+import { WsRequest } from './WsRequest';
 
 export class WsFailureResponse extends WsResponse {
   data: {
@@ -9,9 +9,9 @@ export class WsFailureResponse extends WsResponse {
   };
 
   constructor(action: WsAction, message?: string, reasons?: string[]) {
-    super("failure", action);
+    super('failure', action);
     this.data = {
-      message: message || "Unknown error",
+      message: message || 'Unknown error',
       reasons: reasons,
     };
   }

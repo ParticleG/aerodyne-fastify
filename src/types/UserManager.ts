@@ -1,12 +1,12 @@
-import * as chalk from "chalk";
-import { mkdirSync, readdirSync } from "fs";
-import { Platform } from "icqq";
-import { join, resolve } from "path";
+import * as chalk from 'chalk';
+import { mkdirSync, readdirSync } from 'fs';
+import { Platform } from 'icqq';
+import { join, resolve } from 'path';
 
-import OicqClient from "./OicqClient";
-import WsConnection from "./WsConnection";
-import { OicqAccount } from "../../types/common";
-import { Logger } from "../../types/Logger";
+import { OicqClient } from 'src/types/OicqClient';
+import { WsConnection } from 'src/types/WsConnection';
+import { Logger } from 'src/types/Logger';
+import { OicqAccount } from 'src/types/common';
 
 type ClientMapType = Map<OicqAccount, OicqClient>;
 
@@ -16,10 +16,10 @@ class UserManager {
   private clientMap: ClientMapType = new ClientMap();
 
   constructor() {
-    const dataDir = resolve(join(process.cwd(), "data"));
+    const dataDir = resolve(join(process.cwd(), 'data'));
     Logger.info(
-      "UserManager",
-      "Scanning client tokens in " + chalk.underline(`"${dataDir}"`)
+      'UserManager',
+      'Scanning client tokens in ' + chalk.underline(`"${dataDir}"`)
     );
     try {
       const accounts = readdirSync(dataDir)
@@ -31,19 +31,19 @@ class UserManager {
         });
       if (accounts.length > 0) {
         Logger.info(
-          "UserManager",
-          "Auto login for these accounts: \n\t" + accounts.join("\n\t")
+          'UserManager',
+          'Auto login for these accounts: \n\t' + accounts.join('\n\t')
         );
       } else {
-        Logger.hint("UserManager", "No account found");
+        Logger.hint('UserManager', 'No account found');
       }
     } catch (_) {
-      Logger.warn("UserManager", "Data directory not found, create one");
+      Logger.warn('UserManager', 'Data directory not found, create one');
       mkdirSync(dataDir);
     }
   }
 
-  listClients({ userId }: WsConnection): OicqAccount[] {
+  listClients(): OicqAccount[] {
     return Array.from(this.clientMap.keys() ?? []);
   }
 
@@ -59,9 +59,12 @@ class UserManager {
     return oicqClient.subscribe(wsConnection, password);
   }
 
+  // noinspection JSUnusedGlobalSymbols
   removeClient({ wsId }: WsConnection, account: OicqAccount) {
     this.clientMap.get(account)?.unsubscribe(wsId);
   }
 }
 
-export default new UserManager();
+const UserManagerInstance = new UserManager();
+
+export { UserManagerInstance as UserManager };

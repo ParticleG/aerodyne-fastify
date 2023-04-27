@@ -1,7 +1,7 @@
-import { WsAction } from "./WsAction";
-import { WsRequest } from "./WsRequest";
+import { WsAction } from './WsAction';
+import { WsRequest } from './WsRequest';
 
-type WsResult = "success" | "failure" | "error";
+type WsResult = 'success' | 'failure' | 'error';
 
 export class WsResponse extends WsRequest {
   result: WsResult;

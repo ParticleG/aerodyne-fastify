@@ -1,4 +1,4 @@
-import { WsAction } from "./WsAction";
+import { WsAction } from './WsAction';
 
 export class WsRequest {
   action: WsAction;

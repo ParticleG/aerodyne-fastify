@@ -1,7 +1,8 @@
-import { WsRequest } from "./WsRequest";
-import { WsResponse } from "./WsResponse";
-import { WsAction } from "./WsAction";
+import { WsRequest } from './WsRequest';
+import { WsResponse } from './WsResponse';
+import { WsAction } from './WsAction';
 
+// noinspection JSUnusedGlobalSymbols
 export class WsErrorResponse extends WsResponse {
   data: {
     message: string;
@@ -9,9 +10,9 @@ export class WsErrorResponse extends WsResponse {
   };
 
   constructor(action: WsAction, message?: string, reasons?: string[]) {
-    super("error", action);
+    super('error', action);
     this.data = {
-      message: message || "Unknown error",
+      message: message || 'Unknown error',
       reasons: reasons,
     };
   }

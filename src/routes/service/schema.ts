@@ -1,9 +1,9 @@
 const subscribeSchema = {
   body: {
-    type: "object",
-    required: ["subscription"],
+    type: 'object',
+    required: ['subscription'],
     properties: {
-      subscription: { type: "object" },
+      subscription: { type: 'object' },
     },
   },
 };

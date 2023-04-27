@@ -9,7 +9,8 @@
     "scripts": {
         "start": "tsx server.ts",
         "dev": "tsx watch server.ts",
-        "build": "tsc && node dist/server.js"
+        "build": "tsc && node dist/server.js",
+        "format": "prettier --write src/"
     },
     "keywords": [],
     "author": "particleg",

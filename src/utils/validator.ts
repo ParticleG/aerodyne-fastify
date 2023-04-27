@@ -1,8 +1,8 @@
-import Ajv, { JTDSchemaType, ValidateFunction } from "ajv/dist/jtd";
-import { Logger } from "../types/Logger";
-import { WsAction } from "../types/WsAction";
-import { WsRequest } from "../types/WsRequest";
-import { WsFailureResponse } from "../types/WsFailureResponse";
+import Ajv, { JTDSchemaType, ValidateFunction } from 'ajv/dist/jtd';
+import { Logger } from '../types/Logger';
+import { WsAction } from '../types/WsAction';
+import { WsRequest } from '../types/WsRequest';
+import { WsFailureResponse } from '../types/WsFailureResponse';
 
 class ValidatorMap extends Map<WsAction, ValidateFunction> {}
 
@@ -10,7 +10,7 @@ type ValidatorMapType = Map<WsAction, ValidateFunction>;
 
 const ajv = new Ajv();
 
-Logger.info("Utility", "Initializing data validators...");
+Logger.info('Utility', 'Initializing data validators...');
 
 const WsMessageParser = ajv.compileParser({
   properties: {
@@ -30,10 +30,10 @@ dataValidators.set(
   WsAction.Subscribe,
   ajv.compile({
     properties: {
-      account: { type: "uint32" },
+      account: { type: 'uint32' },
     },
     optionalProperties: {
-      password: { type: "string" },
+      password: { type: 'string' },
     },
   } as JTDSchemaType<{
     account: number;
@@ -44,10 +44,10 @@ dataValidators.set(
   WsAction.Login,
   ajv.compile({
     properties: {
-      account: { type: "uint32" },
+      account: { type: 'uint32' },
     },
     optionalProperties: {
-      payload: { type: "string" },
+      payload: { type: 'string' },
     },
   } as JTDSchemaType<{
     account: number;
@@ -59,8 +59,8 @@ dataValidators.set(
   WsAction.Message,
   ajv.compile({
     properties: {
-      sender: { type: "uint32" },
-      message: { type: "string" },
+      sender: { type: 'uint32' },
+      message: { type: 'string' },
     },
   } as JTDSchemaType<{
     sender: number;
@@ -85,10 +85,10 @@ export function parseWsMessage(raw: string): WsRequest {
   if (!validator(message.data)) {
     throw WsFailureResponse.fromRequest(
       message,
-      "Invalid message data",
+      'Invalid message data',
       validator.errors?.map(
         (e) =>
-          `${e.instancePath} ${e.message ? e.message : "has unknown error"}`
+          `${e.instancePath} ${e.message ? e.message : 'has unknown error'}`
       )
     );
   }

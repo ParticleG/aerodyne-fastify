@@ -1,22 +1,22 @@
-import { createClient } from "icqq";
-import { Client } from "icqq/lib/client";
-import { Platform } from "icqq/lib/core";
+import { createClient } from 'icqq';
+import { Client } from 'icqq/lib/client';
+import { Platform } from 'icqq/lib/core';
 import {
   DiscussMessageEvent,
   GroupMessageEvent,
   PrivateMessageEvent,
-} from "icqq/lib/events";
+} from 'icqq/lib/events';
 
-import WsConnection from "./WsConnection";
-import { OicqAccount, WsId } from "./common";
-import { ClientState } from "./ClientState";
-import { WsSuccessResponse } from "./WsSuccessResponse";
-import { WsAction } from "./WsAction";
-import { WsFailureResponse } from "./WsFailureResponse";
-import { md5 } from "../utils";
-import { WsResponse } from "./WsResponse";
+import { WsConnection } from './WsConnection';
+import { OicqAccount, WsId } from './common';
+import { ClientState } from './ClientState';
+import { WsSuccessResponse } from './WsSuccessResponse';
+import { WsAction } from './WsAction';
+import { WsFailureResponse } from './WsFailureResponse';
+import { WsResponse } from './WsResponse';
+import { md5 } from 'src/utils/common';
 
-export default class OicqClient {
+export class OicqClient {
   readonly account: OicqAccount;
   state: ClientState;
   private client: Client;
@@ -27,12 +27,12 @@ export default class OicqClient {
   >();
 
   constructor(platform: Platform, account: OicqAccount) {
-    this.client = createClient({ log_level: "warn", platform: platform });
+    this.client = createClient({ log_level: 'warn', platform: platform });
     this.state = ClientState.Initializing;
     this.account = account;
 
     this.client.on(
-      "message",
+      'message',
       (
         event: PrivateMessageEvent | GroupMessageEvent | DiscussMessageEvent
       ) => {
@@ -41,22 +41,22 @@ export default class OicqClient {
     );
 
     this.client.on(
-      "system.login.device",
+      'system.login.device',
       (event: { url: string; phone: string }) => {
         this.state = ClientState.WaitingSmsCode;
         this.client.sendSmsCode();
         this.broadcast(new WsSuccessResponse(WsAction.Login, event));
       }
     );
-    this.client.on("system.login.qrcode", (event: { image: Buffer }) => {
+    this.client.on('system.login.qrcode', (event: { image: Buffer }) => {
       this.state = ClientState.WaitingQRCode;
       this.broadcast(new WsSuccessResponse(WsAction.Login, event));
     });
-    this.client.on("system.login.slider", (event: { url: string }) => {
+    this.client.on('system.login.slider', (event: { url: string }) => {
       this.state = ClientState.WaitingSlider;
       this.broadcast(new WsSuccessResponse(WsAction.Login, event));
     });
-    this.client.on("system.login.error", ({ code, message }) => {
+    this.client.on('system.login.error', ({ code, message }) => {
       this.state = ClientState.Offline;
 
       this.broadcast(
@@ -66,25 +66,25 @@ export default class OicqClient {
       );
     });
 
-    this.client.on("system.online", () => {
+    this.client.on('system.online', () => {
       this.state = ClientState.Online;
       this.broadcast(new WsSuccessResponse(WsAction.Login));
     });
-    this.client.on("system.offline.kickoff", ({ message }) => {
+    this.client.on('system.offline.kickoff', ({ message }) => {
       this.state = ClientState.Offline;
       this.broadcast(
-        new WsFailureResponse(WsAction.Logout, message, ["Kicked off"])
+        new WsFailureResponse(WsAction.Logout, message, ['Kicked off'])
       );
     });
-    this.client.on("system.offline.network", ({ message }) => {
+    this.client.on('system.offline.network', ({ message }) => {
       this.state = ClientState.Offline;
       this.broadcast(
-        new WsFailureResponse(WsAction.Logout, message, ["Network"])
+        new WsFailureResponse(WsAction.Logout, message, ['Network'])
       );
     });
   }
 
-  validate(wsConnection: WsConnection, password: string = ""): boolean {
+  validate(wsConnection: WsConnection, password: string = ''): boolean {
     if (this.state === ClientState.Initializing) {
       return true;
     }
@@ -116,7 +116,7 @@ export default class OicqClient {
     switch (this.state) {
       case ClientState.Initializing: {
         if (!payload) {
-          throw new WsFailureResponse(WsAction.Login, "Missing password", [
+          throw new WsFailureResponse(WsAction.Login, 'Missing password', [
             JSON.stringify({ state: this.state }),
           ]);
         }
@@ -126,7 +126,7 @@ export default class OicqClient {
       }
       case ClientState.WaitingSmsCode: {
         if (!payload) {
-          throw new WsFailureResponse(WsAction.Login, "Missing sms code", [
+          throw new WsFailureResponse(WsAction.Login, 'Missing sms code', [
             JSON.stringify({ state: this.state }),
           ]);
         }
@@ -139,7 +139,7 @@ export default class OicqClient {
       }
       case ClientState.WaitingSlider: {
         if (!payload) {
-          throw new WsFailureResponse(WsAction.Login, "Missing login ticket", [
+          throw new WsFailureResponse(WsAction.Login, 'Missing login ticket', [
             JSON.stringify({ state: this.state }),
           ]);
         }
@@ -147,7 +147,7 @@ export default class OicqClient {
         break;
       }
       case ClientState.Online: {
-        throw new WsFailureResponse(WsAction.Login, "Already online", [
+        throw new WsFailureResponse(WsAction.Login, 'Already online', [
           JSON.stringify({ state: this.state }),
         ]);
       }

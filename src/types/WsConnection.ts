@@ -1,22 +1,22 @@
-import { v4 as uuid } from "uuid";
-import { RawData, WebSocket } from "ws";
+import { v4 as uuid } from 'uuid';
+import { RawData, WebSocket } from 'ws';
 
-import OicqClient from "./OicqClient";
-import UserManager from "./UserManager";
-import { OicqAccount, UserId, WsId } from "./common";
-import { WsRequest } from "./WsRequest";
-import { WsAction } from "./WsAction";
-import { WsResponse } from "./WsResponse";
-import { parseWsMessage } from "../utils/validator";
-import { WsSuccessResponse } from "./WsSuccessResponse";
-import { getSystemInfo } from "../utils";
-import { WsFailureResponse } from "./WsFailureResponse";
+import { OicqClient } from './OicqClient';
+import { UserManager } from './UserManager';
+import { OicqAccount, UserId, WsId } from './common';
+import { WsRequest } from './WsRequest';
+import { WsAction } from './WsAction';
+import { WsResponse } from './WsResponse';
+import { parseWsMessage } from '../utils/validator';
+import { WsSuccessResponse } from './WsSuccessResponse';
+import { WsFailureResponse } from './WsFailureResponse';
+import { getSystemInfo } from 'src/utils/common';
 
 type MessageHandler = (wsMessage: WsRequest) => Promise<void>;
 type ClientMap = Map<OicqAccount, OicqClient | undefined>;
 type HandlerMap = Map<WsAction, MessageHandler>;
 
-export default class WsConnection {
+export class WsConnection {
   readonly wsId: WsId = uuid();
   userId: UserId;
   private socket: WebSocket;
@@ -27,10 +27,10 @@ export default class WsConnection {
     this.userId = userId;
     this.socket = ws;
 
-    this.socket.on("message", async (message) => {
+    this.socket.on('message', async (message) => {
       await this.handleMessage(message);
     });
-    this.socket.on("close", () => {
+    this.socket.on('close', () => {
       this.clientMap.forEach((client) => {
         client?.unsubscribe(this.wsId);
       });
@@ -53,7 +53,7 @@ export default class WsConnection {
   }
 
   respond(wsResponse: WsResponse) {
-    if (wsResponse.result === "error") {
+    if (wsResponse.result === 'error') {
       this.socket.close(1011, wsResponse.toString());
     } else {
       this.socket.send(wsResponse.toString());
@@ -77,7 +77,7 @@ export default class WsConnection {
 
   private async listHandler(wsMessage: WsRequest) {
     this.respond(
-      WsSuccessResponse.fromRequest(wsMessage, UserManager.listClients(this))
+      WsSuccessResponse.fromRequest(wsMessage, UserManager.listClients())
     );
   }
 
@@ -88,8 +88,8 @@ export default class WsConnection {
       this.respond(WsSuccessResponse.fromRequest(wsMessage));
     } else {
       this.respond(
-        WsFailureResponse.fromRequest(wsMessage, "Validate failed", [
-          "Please check the account",
+        WsFailureResponse.fromRequest(wsMessage, 'Validate failed', [
+          'Please check the account',
         ])
       );
     }
@@ -100,8 +100,8 @@ export default class WsConnection {
     const client = this.clientMap.get(account);
     if (client === undefined) {
       this.respond(
-        WsFailureResponse.fromRequest(wsMessage, "Client not found", [
-          "Subscribe to the account first",
+        WsFailureResponse.fromRequest(wsMessage, 'Client not found', [
+          'Subscribe to the account first',
         ])
       );
       return;

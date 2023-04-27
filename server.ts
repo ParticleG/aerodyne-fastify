@@ -5,7 +5,7 @@ import cors from "@fastify/cors";
 import websocket from "@fastify/websocket";
 import * as webPush from "web-push";
 
-import { Logger } from "./src/utils";
+import { Logger } from "src/types/Logger";
 
 const fastify = Fastify({
   logger: {
@@ -16,6 +16,7 @@ const fastify = Fastify({
 async function main() {
   await fastify.register(import("./config"));
   await fastify.register(cors, {});
+  // noinspection JSUnusedGlobalSymbols
   await fastify.register(websocket, {
     errorHandler: function(error, conn, req, reply) {
       console.log(error);
