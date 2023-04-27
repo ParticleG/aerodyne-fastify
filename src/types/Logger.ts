@@ -1,12 +1,11 @@
 import * as chalk from 'chalk';
 import { format } from 'date-and-time';
 
-// noinspection JSUnusedGlobalSymbols
 const colorMap = {
   success: chalk.green,
   info: chalk.blue,
   verbose: chalk.grey,
-  plain: (text: any) => text,
+  plain: chalk.white,
   warning: chalk.yellow,
   error: chalk.red,
 };
@@ -21,7 +20,7 @@ export class Logger {
   }
 
   static hint(module: string, message: any) {
-    this._log('plain', module, message);
+    this._log('verbose', module, message);
   }
 
   static log(module: string, message: any) {
@@ -37,7 +36,7 @@ export class Logger {
   }
 
   private static _log(
-    type: 'success' | 'info' | 'plain' | 'warning' | 'error',
+    type: 'success' | 'info' | 'verbose' | 'plain' | 'warning' | 'error',
     module: string,
     message: any,
     reason?: any,

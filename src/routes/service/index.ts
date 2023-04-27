@@ -2,9 +2,9 @@ import { FastifyPluginAsync } from 'fastify';
 import * as webPush from 'web-push';
 import { subscribeSchema } from './schema';
 
-const service: FastifyPluginAsync = async (fastify): Promise<void> => {
+export default <FastifyPluginAsync>(async (fastify): Promise<void> => {
   webPush.setVapidDetails(
-    'mailto:particle_g@outlook.com',
+    `mailto:${fastify.config.vapid.email}`,
     fastify.config.vapid.public_key,
     fastify.config.vapid.private_key
   );
@@ -23,6 +23,4 @@ const service: FastifyPluginAsync = async (fastify): Promise<void> => {
     );
     return {};
   });
-};
-
-export default service;
+});

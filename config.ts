@@ -1,13 +1,13 @@
-import Ajv from "ajv";
-import { readFileSync } from "fs";
-import fastifyPlugin from "fastify-plugin";
-import { join, resolve } from "path";
-import { parse } from "toml";
+import Ajv from 'ajv';
+import { readFileSync } from 'fs';
+import fastifyPlugin from 'fastify-plugin';
+import { join, resolve } from 'path';
+import { parse } from 'toml';
 
 const ajv = new Ajv();
 
 type ConfigType = {
-  mode: "development" | "production";
+  mode: 'single' | 'multiple';
   server: {
     close_delay: number;
     host: string;
@@ -21,26 +21,26 @@ type ConfigType = {
 };
 
 const validate = ajv.compile({
-  type: "object",
-  required: ["mode", "server", "vapid"],
+  type: 'object',
+  required: ['mode', 'server', 'vapid'],
   properties: {
     mode: {
-      enum: ["development", "production"],
+      enum: ['single', 'multiple'],
     },
     server: {
-      type: "object",
+      type: 'object',
       properties: {
         close_delay: {
-          type: "number",
+          type: 'number',
           default: 500,
           minimum: 0,
         },
         host: {
-          type: "string",
-          default: "localhost",
+          type: 'string',
+          default: 'localhost',
         },
         port: {
-          type: "number",
+          type: 'number',
           default: 3000,
           minimum: 0,
           maximum: 65535,
@@ -48,18 +48,18 @@ const validate = ajv.compile({
       },
     },
     vapid: {
-      type: "object",
-      required: ["private_key", "public_key"],
+      type: 'object',
+      required: ['private_key', 'public_key'],
       properties: {
         email: {
-          type: "string",
+          type: 'string',
         },
         private_key: {
-          type: "string",
+          type: 'string',
           minLength: 43,
         },
         public_key: {
-          type: "string",
+          type: 'string',
           minLength: 87,
         },
       },
@@ -69,7 +69,7 @@ const validate = ajv.compile({
 
 export default fastifyPlugin(async (fastify) => {
   const config = parse(
-    readFileSync(resolve(join(process.cwd(), "config.toml"))).toString()
+    readFileSync(resolve(join(process.cwd(), 'config.toml'))).toString()
   );
 
   if (validate(config)) {
@@ -79,7 +79,7 @@ export default fastifyPlugin(async (fastify) => {
   }
 });
 
-declare module "fastify" {
+declare module 'fastify' {
   // noinspection JSUnusedGlobalSymbols
   interface FastifyInstance {
     config: ConfigType;

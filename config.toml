@@ -1,6 +1,6 @@
 # This is a TOML document
 
-mode = "development"
+mode = "single"
 
 [server]
 close_delay = 500
@@ -9,5 +9,6 @@ port = 3000
 
 # DON'T USE THIS IN PRODUCTION, GENERATE YOUR OWN KEYS
 [vapid]
+email = "noreply@example.com"
 private_key = "Ib8rbVH2uksPrFfD0aQlldDgB7AvOLo9xiOhvUCVcNo"
 public_key = "BJ8at-_GOJDfUBClVFGri12TD3OBpFyuc3O_8E1tgTts0oahPOceg3n8Y9-OS0eeigNhm2D7FzdhedO2f3b0Ljs"

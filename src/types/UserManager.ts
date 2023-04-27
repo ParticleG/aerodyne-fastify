@@ -38,7 +38,10 @@ class UserManager {
         Logger.hint('UserManager', 'No account found');
       }
     } catch (_) {
-      Logger.warn('UserManager', 'Data directory not found, create one');
+      Logger.warn(
+        'UserManager',
+        chalk.grey('Data directory not found, create one')
+      );
       mkdirSync(dataDir);
     }
   }
