@@ -11,6 +11,8 @@ import { parseWsMessage } from '../utils/validator';
 import { WsSuccessResponse } from './WsSuccessResponse';
 import { WsFailureResponse } from './WsFailureResponse';
 import { getSystemInfo } from 'src/utils/common';
+import { Logger } from "src/types/Logger";
+import * as chalk from "chalk";
 
 type MessageHandler = (wsMessage: WsRequest) => Promise<void>;
 type ClientMap = Map<OicqAccount, OicqClient | undefined>;
@@ -34,7 +36,7 @@ export class WsConnection {
       this.clientMap.forEach((client) => {
         client?.unsubscribe(this.wsId);
       });
-      console.log("[Close]Connection's client map size: ", this.clientMap.size);
+      Logger.info("OICQ", `Connection closed for userId: ${chalk.blue(userId)}`);
     });
 
     this.handlerMap.set(WsAction.Monitor, this.monitorHandler);
