@@ -40,7 +40,7 @@ class ClientManager {
             if (!this.clientMap.has(account)) {
               this.clientMap.set(
                 account,
-                new OicqClient(Platform.aPad, account)
+                new OicqClient(Platform.old_Android, account)
               );
             }
             const oicqClient = this.clientMap.get(account)!;
@@ -60,7 +60,10 @@ class ClientManager {
     account: OicqAccount
   ): ClientState | undefined {
     if (!this.clientMap.has(account)) {
-      this.clientMap.set(account, new OicqClient(Platform.aPad, account));
+      this.clientMap.set(
+        account,
+        new OicqClient(Platform.old_Android, account)
+      );
     }
     const oicqClient = this.clientMap.get(account)!;
     return oicqClient.subscribe(wsConnection);
