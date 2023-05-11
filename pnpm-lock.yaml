@@ -26,8 +26,8 @@ dependencies:
     specifier: ^4.5.0
     version: 4.5.0
   icqq:
-    specifier: ^0.3.9
-    version: 0.3.9
+    specifier: ^0.3.10
+    version: 0.3.10
   node-os-utils:
     specifier: ^1.3.7
     version: 1.3.7
@@ -49,8 +49,8 @@ dependencies:
 
 devDependencies:
   '@types/node':
-    specifier: 20.1.0
-    version: 20.1.0
+    specifier: 20.1.2
+    version: 20.1.2
   '@types/node-os-utils':
     specifier: ^1.3.1
     version: 1.3.1
@@ -834,7 +834,7 @@ packages:
     engines: {node: ^8.13.0 || >=10.10.0}
     dependencies:
       '@grpc/proto-loader': 0.7.6
-      '@types/node': 20.1.0
+      '@types/node': 20.1.2
     dev: false
 
   /@grpc/proto-loader@0.6.13:
@@ -912,7 +912,7 @@ packages:
     resolution: {integrity: sha512-ALYone6pm6QmwZoAgeyNksccT9Q4AWZQ6PvfwR37GT6r6FWUPguq6sUmNGSMV2Wr761oQoBxwGGa6DR5o1DC9g==}
     dependencies:
       '@types/connect': 3.4.35
-      '@types/node': 20.1.0
+      '@types/node': 20.1.2
     dev: false
 
   /@types/clone@2.1.1:
@@ -926,19 +926,19 @@ packages:
   /@types/connect@3.4.35:
     resolution: {integrity: sha512-cdeYyv4KWoEgpBISTxWvqYsVy444DOqehiF3fM3ne10AmJ62RSyNkUnxMJXHQWRQQX2eR94m5y1IZyDwBjV9FQ==}
     dependencies:
-      '@types/node': 20.1.0
+      '@types/node': 20.1.2
     dev: false
 
   /@types/cors@2.8.13:
     resolution: {integrity: sha512-RG8AStHlUiV5ysZQKq97copd2UmVYw3/pRMLefISZ3S1hK104Cwm7iLQ3fTKx+lsUH2CE8FlLaYeEA2LSeqYUA==}
     dependencies:
-      '@types/node': 20.1.0
+      '@types/node': 20.1.2
     dev: false
 
   /@types/express-serve-static-core@4.17.33:
     resolution: {integrity: sha512-TPBqmR/HRYI3eC2E5hmiivIzv+bidAfXofM+sbonAGvyDhySGw9/PQZFt2BLOrjUUR++4eJVpx6KnLQK1Fk9tA==}
     dependencies:
-      '@types/node': 20.1.0
+      '@types/node': 20.1.2
       '@types/qs': 6.9.7
       '@types/range-parser': 1.2.4
     dev: false
@@ -972,8 +972,8 @@ packages:
     resolution: {integrity: sha512-gokG1AaQo78X3f1KXOPAfwbhERX95XL0nhosOhwFck0hZ3BG52Mfch3oj3gAhXuUsou3lwi+ewZWjDo0wshKwQ==}
     dev: true
 
-  /@types/node@20.1.0:
-    resolution: {integrity: sha512-O+z53uwx64xY7D6roOi4+jApDGFg0qn6WHcxe5QeqjMaTezBO/mxdfFXIVAVVyNWKx84OmPB3L8kbVYOTeN34A==}
+  /@types/node@20.1.2:
+    resolution: {integrity: sha512-CTO/wa8x+rZU626cL2BlbCDzydgnFNgc19h4YvizpTO88MFQxab8wqisxaofQJ/9bLGugRdWIuX/TbIs6VVF6g==}
 
   /@types/qs@6.9.7:
     resolution: {integrity: sha512-FGa1F62FT09qcrueBA6qYTrJPVDzah9a+493+o2PCXsesWHIn27G98TsSMs3WPNbZIEj4+VJf6saSFpvD+3Zsw==}
@@ -987,19 +987,19 @@ packages:
     resolution: {integrity: sha512-NUo5XNiAdULrJENtJXZZ3fHtfMolzZwczzBbnAeBbqBwG+LaG6YaJtuwzwGSQZ2wsCrxjEhNNjAkKigy3n8teQ==}
     dependencies:
       '@types/mime': 3.0.1
-      '@types/node': 20.1.0
+      '@types/node': 20.1.2
     dev: false
 
   /@types/simple-peer@9.11.5:
     resolution: {integrity: sha512-haXgWcAa3Y3Sn+T8lzkE4ErQUpYzhW6Cz2lh00RhQTyWt+xZ3s87wJPztUxlqSdFRqGhe2MQIBd0XsyHP3No4w==}
     dependencies:
-      '@types/node': 20.1.0
+      '@types/node': 20.1.2
     dev: false
 
   /@types/tap@15.0.8:
     resolution: {integrity: sha512-ZfeoiZlLIaFi4t6wccwbTEicrHREkP0bOq8dZVi/nWvG5F8O7LlS2cSUZBiOW/D4cgWS/p2uhM3lJoyzFAl80w==}
     dependencies:
-      '@types/node': 20.1.0
+      '@types/node': 20.1.2
     dev: true
 
   /@types/uuid@9.0.1:
@@ -1009,13 +1009,13 @@ packages:
   /@types/web-push@3.3.2:
     resolution: {integrity: sha512-JxWGVL/m7mWTIg4mRYO+A6s0jPmBkr4iJr39DqJpRJAc+jrPiEe1/asmkwerzRon8ZZDxaZJpsxpv0Z18Wo9gw==}
     dependencies:
-      '@types/node': 20.1.0
+      '@types/node': 20.1.2
     dev: true
 
   /@types/ws@8.5.4:
     resolution: {integrity: sha512-zdQDHKUgcX/zBc4GrwsE/7dVdAD8JR4EuiAXiiUhhfyIJXXb2+PrGshFyeXWQPMmmZ2XxgaqclgpIC7eTXc1mg==}
     dependencies:
-      '@types/node': 20.1.0
+      '@types/node': 20.1.2
 
   /abort-controller@3.0.0:
     resolution: {integrity: sha512-h8lQ8tacZYnR3vNQTgibj+tODHI5/+l06Au2Pcriv/Gmet0eaj4TwWH41sO9wnHDiQsEj19q0drzdWdeAHtweg==}
@@ -1762,8 +1762,8 @@ packages:
       safer-buffer: 2.1.2
     dev: false
 
-  /icqq@0.3.9:
-    resolution: {integrity: sha512-W31T0gicuLF0u+j4wJw5JxTpxLBRxPKNUaNmydWRbyE+lAltBkSbA1ht7ocHbtRMRGIG5HLDYLv7qrtviV2Dhg==}
+  /icqq@0.3.10:
+    resolution: {integrity: sha512-54MO74jSZgwXNpr0VBx7akp50IM6qNGYV8ZrCs9PDfcrtb3jpxhxwW9xHBBBgzzHFdbWv6/WggJjuexEttQRKQ==}
     engines: {node: '>= v14'}
     dependencies:
       axios: 1.3.6
@@ -2240,7 +2240,7 @@ packages:
       '@protobufjs/pool': 1.1.0
       '@protobufjs/utf8': 1.1.0
       '@types/long': 4.0.2
-      '@types/node': 20.1.0
+      '@types/node': 20.1.2
       long: 4.0.0
     dev: false
 
@@ -2259,7 +2259,7 @@ packages:
       '@protobufjs/path': 1.1.2
       '@protobufjs/pool': 1.1.0
       '@protobufjs/utf8': 1.1.0
-      '@types/node': 20.1.0
+      '@types/node': 20.1.2
       long: 5.2.3
     dev: false
 

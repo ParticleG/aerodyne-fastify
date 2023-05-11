@@ -40,7 +40,7 @@ class ClientManager {
             if (!this.clientMap.has(account)) {
               this.clientMap.set(
                 account,
-                new OicqClient(Platform.Android, account)
+                new OicqClient(Platform.aPad, account)
               );
             }
             const oicqClient = this.clientMap.get(account)!;
@@ -49,8 +49,7 @@ class ClientManager {
       } else {
         Logger.hint('UserManager', LogLevel.verbose('No account found'));
       }
-    } catch (e) {
-      console.log(e);
+    } catch (_) {
       Logger.warn('UserManager', 'Data directory not found, create one');
       mkdirSync(dataDir);
     }
@@ -61,7 +60,7 @@ class ClientManager {
     account: OicqAccount
   ): ClientState | undefined {
     if (!this.clientMap.has(account)) {
-      this.clientMap.set(account, new OicqClient(Platform.Android, account));
+      this.clientMap.set(account, new OicqClient(Platform.aPad, account));
     }
     const oicqClient = this.clientMap.get(account)!;
     return oicqClient.subscribe(wsConnection);

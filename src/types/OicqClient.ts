@@ -56,7 +56,7 @@ export class OicqClient {
       this.broadcast(new WsSuccessResponse(WsAction.Login, event));
     });
     this.client.on('system.login.error', ({ code, message }) => {
-      this.state = ClientState.Offline;
+      this.state = ClientState.Initializing;
 
       this.broadcast(
         new WsFailureResponse(WsAction.Login, message, [

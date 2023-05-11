@@ -8,7 +8,7 @@ export const sliderHtml = `
   <title>滑条验证码</title>
 </head>
 <body>
-<div id="cap_iframe" style="width: 230px; height: 220px"></div>
+<div id="cap_iframe" style="width: 100%; height: 100%"/>
 <!--suppress JSUnresolvedReference -->
 <script type="text/javascript">
   (() => {
