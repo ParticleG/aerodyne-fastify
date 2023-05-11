@@ -1,11 +1,10 @@
-import * as chalk from 'chalk';
 import { mkdirSync, readdirSync } from 'fs';
 import { Platform } from 'icqq';
 import { join, resolve } from 'path';
 
 import { OicqClient } from 'src/types/OicqClient';
 import { WsConnection } from 'src/types/WsConnection';
-import { Logger } from 'src/types/Logger';
+import { Logger, LogLevel } from 'src/types/Logger';
 import { OicqAccount } from 'src/types/common';
 
 type ClientMapType = Map<OicqAccount, OicqClient>;
@@ -19,7 +18,7 @@ class UserManager {
     const dataDir = resolve(join(process.cwd(), 'data'));
     Logger.info(
       'UserManager',
-      'Scanning client tokens in ' + chalk.underline(`"${dataDir}"`)
+      'Scanning client tokens in ' + LogLevel.link(dataDir)
     );
     try {
       const accounts = readdirSync(dataDir)
@@ -35,13 +34,10 @@ class UserManager {
           'Auto login for these accounts: \n\t' + accounts.join('\n\t')
         );
       } else {
-        Logger.hint('UserManager', 'No account found');
+        Logger.hint('UserManager', LogLevel.verbose('No account found'));
       }
     } catch (_) {
-      Logger.warn(
-        'UserManager',
-        chalk.grey('Data directory not found, create one')
-      );
+      Logger.warn('UserManager', 'Data directory not found, create one');
       mkdirSync(dataDir);
     }
   }

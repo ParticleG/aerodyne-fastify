@@ -1,11 +1,10 @@
 import { ErrorObject } from 'ajv/lib/types';
-import * as chalk from 'chalk';
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import websocket from '@fastify/websocket';
 import * as webPush from 'web-push';
 
-import { Logger } from 'src/types/Logger';
+import { Logger, LogLevel } from "src/types/Logger";
 
 const fastify = Fastify({
   logger: {
@@ -15,7 +14,7 @@ const fastify = Fastify({
 
 async function main() {
   await fastify.register(import('./config'));
-  Logger.info('Config', `Running in ${chalk.blue(fastify.config.mode)} mode`);
+  Logger.info('Config', `Running in ${LogLevel.info(fastify.config.mode)} mode`);
   await fastify.register(cors, {});
   // noinspection JSUnusedGlobalSymbols
   await fastify.register(websocket, {
@@ -47,9 +46,9 @@ main().catch((errors) => {
     errors.forEach((error: ErrorObject) => {
       const module = 'Config';
       const reason =
-        chalk.yellow(`${error.message}`) +
+        LogLevel.warning(`${error.message}`) +
         (error.instancePath
-          ? ' at ' + chalk.blue.underline(error.instancePath)
+          ? ' at ' + LogLevel.link(error.instancePath)
           : '');
       if (
         error.instancePath === '/vapid/private_key' ||
@@ -60,7 +59,7 @@ main().catch((errors) => {
           'Invalid config item',
           reason,
           'Use these generated keys in config file: ' +
-            chalk.green(
+            LogLevel.info(
               JSON.stringify(webPush.generateVAPIDKeys(), undefined, 2)
             )
         );

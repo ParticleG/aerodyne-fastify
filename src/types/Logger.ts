@@ -1,11 +1,12 @@
 import * as chalk from 'chalk';
 import { format } from 'date-and-time';
 
-const colorMap = {
+export const LogLevel = {
   success: chalk.green,
-  info: chalk.blue,
+  info: chalk.cyan,
   verbose: chalk.grey,
   plain: chalk.white,
+  link: chalk.underline,
   warning: chalk.yellow,
   error: chalk.red,
 };
@@ -42,9 +43,9 @@ export class Logger {
     reason?: any,
     hint?: any
   ): void {
-    const baseColor = colorMap[type];
+    const baseColor = LogLevel[type];
     let result =
-      chalk.grey(`[${format(new Date(), 'mm/dd HH:MM:ss.l')}] `) +
+      LogLevel.verbose(`[${format(new Date(), 'YYYY/MM/DD HH:mm:ss.SSS')}] `) +
       baseColor(`│${module}│ `) +
       message;
     if (reason) {
@@ -58,7 +59,7 @@ export class Logger {
     if (hint) {
       result +=
         ' '.repeat(22 + module.length) +
-        `├ ${chalk.blue('You can try solutions below: \n')}` +
+        `├ ${LogLevel.info('You can try solutions below: \n')}` +
         ' '.repeat(22 + module.length);
       result += `└ ${hint.replaceAll(
         '\n',

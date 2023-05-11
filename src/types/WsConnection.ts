@@ -11,8 +11,7 @@ import { parseWsMessage } from '../utils/validator';
 import { WsSuccessResponse } from './WsSuccessResponse';
 import { WsFailureResponse } from './WsFailureResponse';
 import { getSystemInfo } from 'src/utils/common';
-import { Logger } from 'src/types/Logger';
-import * as chalk from 'chalk';
+import { Logger, LogLevel } from 'src/types/Logger';
 
 type MessageHandler = (wsMessage: WsRequest) => Promise<void>;
 type ClientMap = Map<OicqAccount, OicqClient | undefined>;
@@ -38,7 +37,7 @@ export class WsConnection {
       });
       Logger.info(
         'OICQ',
-        `Connection closed for userId: ${chalk.blue(userId)}`
+        `Connection closed for userId: ${LogLevel.info(userId)}`
       );
     });
 
