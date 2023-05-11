@@ -6,12 +6,13 @@ import { OicqClient } from 'src/types/OicqClient';
 import { WsConnection } from 'src/types/WsConnection';
 import { Logger, LogLevel } from 'src/types/Logger';
 import { OicqAccount } from 'src/types/common';
+import { ClientState } from 'src/types/ClientState';
 
 type ClientMapType = Map<OicqAccount, OicqClient>;
 
 class ClientMap extends Map<OicqAccount, OicqClient> {}
 
-class UserManager {
+class ClientManager {
   private clientMap: ClientMapType = new ClientMap();
 
   constructor() {
@@ -23,7 +24,7 @@ class UserManager {
     try {
       const accounts = readdirSync(dataDir)
         .filter((file) => {
-          return file.match(/.*\.(token?)/gi);
+          return file.match(/.*_(token?)/gi);
         })
         .map((file) => {
           return file.substring(0, file.length - 6);
@@ -33,29 +34,49 @@ class UserManager {
           'UserManager',
           'Auto login for these accounts: \n\t' + accounts.join('\n\t')
         );
+        accounts
+          .map((account) => Number(account))
+          .forEach((account) => {
+            if (!this.clientMap.has(account)) {
+              this.clientMap.set(
+                account,
+                new OicqClient(Platform.Android, account)
+              );
+            }
+            const oicqClient = this.clientMap.get(account)!;
+            oicqClient.login();
+          });
       } else {
         Logger.hint('UserManager', LogLevel.verbose('No account found'));
       }
-    } catch (_) {
+    } catch (e) {
+      console.log(e);
       Logger.warn('UserManager', 'Data directory not found, create one');
       mkdirSync(dataDir);
     }
+  }
+
+  connectClient(
+    wsConnection: WsConnection,
+    account: OicqAccount
+  ): ClientState | undefined {
+    if (!this.clientMap.has(account)) {
+      this.clientMap.set(account, new OicqClient(Platform.Android, account));
+    }
+    const oicqClient = this.clientMap.get(account)!;
+    return oicqClient.subscribe(wsConnection);
   }
 
   listClients(): OicqAccount[] {
     return Array.from(this.clientMap.keys() ?? []);
   }
 
-  connectClient(
-    wsConnection: WsConnection,
-    account: OicqAccount,
-    password?: string
-  ): boolean {
-    if (!this.clientMap.has(account)) {
-      this.clientMap.set(account, new OicqClient(Platform.Android, account));
+  loginClient(account: number, payload?: string): boolean {
+    if (this.clientMap.has(account)) {
+      this.clientMap.get(account)?.login(payload);
+      return true;
     }
-    const oicqClient = this.clientMap.get(account)!;
-    return oicqClient.subscribe(wsConnection, password);
+    return false;
   }
 
   // noinspection JSUnusedGlobalSymbols
@@ -64,6 +85,6 @@ class UserManager {
   }
 }
 
-const UserManagerInstance = new UserManager();
+const ClientManagerInstance = new ClientManager();
 
-export { UserManagerInstance as UserManager };
+export { ClientManagerInstance as ClientManager };

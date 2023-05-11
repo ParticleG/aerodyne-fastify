@@ -2,7 +2,7 @@ import { v4 as uuid } from 'uuid';
 import { RawData, WebSocket } from 'ws';
 
 import { OicqClient } from './OicqClient';
-import { UserManager } from './UserManager';
+import { ClientManager } from './ClientManager';
 import { OicqAccount, UserId, WsId } from './common';
 import { WsRequest } from './WsRequest';
 import { WsAction } from './WsAction';
@@ -81,15 +81,15 @@ export class WsConnection {
 
   private async listHandler(wsMessage: WsRequest) {
     this.respond(
-      WsSuccessResponse.fromRequest(wsMessage, UserManager.listClients())
+      WsSuccessResponse.fromRequest(wsMessage, ClientManager.listClients())
     );
   }
 
   private async subscribeHandler(wsMessage: WsRequest) {
-    const { account, password } = wsMessage.data;
-    const result = UserManager.connectClient(this, account, password);
+    const { account } = wsMessage.data;
+    const result = ClientManager.connectClient(this, account);
     if (result) {
-      this.respond(WsSuccessResponse.fromRequest(wsMessage));
+      this.respond(WsSuccessResponse.fromRequest(wsMessage, result));
     } else {
       this.respond(
         WsFailureResponse.fromRequest(wsMessage, 'Validate failed', [

@@ -32,12 +32,8 @@ dataValidators.set(
     properties: {
       account: { type: 'uint32' },
     },
-    optionalProperties: {
-      password: { type: 'string' },
-    },
   } as JTDSchemaType<{
     account: number;
-    password?: string;
   }>)
 );
 dataValidators.set(

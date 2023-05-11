@@ -8,19 +8,18 @@ import {
 } from 'icqq/lib/events';
 
 import { WsConnection } from './WsConnection';
-import { OicqAccount, WsId } from './common';
+import { OicqAccount, UserId, WsId } from './common';
 import { ClientState } from './ClientState';
 import { WsSuccessResponse } from './WsSuccessResponse';
 import { WsAction } from './WsAction';
 import { WsFailureResponse } from './WsFailureResponse';
 import { WsResponse } from './WsResponse';
-import { md5 } from 'src/utils/common';
 
 export class OicqClient {
   readonly account: OicqAccount;
   state: ClientState;
+  private allowedUsers: UserId[] = [];
   private client: Client;
-  private passwordHash?: string;
   private connectionMap: Map<WsId, WsConnection> = new Map<
     WsId,
     WsConnection
@@ -84,24 +83,24 @@ export class OicqClient {
     });
   }
 
-  validate(wsConnection: WsConnection, password: string = ''): boolean {
-    if (this.state === ClientState.Initializing) {
-      return true;
+  validate(wsConnection: WsConnection): boolean {
+    if (this.allowedUsers.length === 0) {
+      this.allowedUsers.push(wsConnection.userId);
     }
-    return md5(password) === this.passwordHash;
+    return wsConnection.userId in this.allowedUsers;
   }
 
-  subscribe(wsConnection: WsConnection, password?: string): boolean {
-    this.connectionMap.set(wsConnection.wsId, wsConnection);
-    if (this.validate(wsConnection, password)) {
+  subscribe(wsConnection: WsConnection): ClientState | undefined {
+    if (this.validate(wsConnection)) {
+      this.connectionMap.set(wsConnection.wsId, wsConnection);
       wsConnection.subscribe(this);
       console.log(
         "[Subscribe]Client's subscriber map size: ",
         this.connectionMap.size
       );
-      return true;
+      return this.state;
     }
-    return false;
+    return undefined;
   }
 
   unsubscribe(wsId: WsId) {
@@ -115,13 +114,7 @@ export class OicqClient {
   login(payload?: string) {
     switch (this.state) {
       case ClientState.Initializing: {
-        if (!payload) {
-          throw new WsFailureResponse(WsAction.Login, 'Missing password', [
-            JSON.stringify({ state: this.state }),
-          ]);
-        }
         this.client.login(this.account, payload).then();
-        this.passwordHash = md5(payload);
         break;
       }
       case ClientState.WaitingSmsCode: {

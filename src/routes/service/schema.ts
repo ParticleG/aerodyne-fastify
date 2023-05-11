@@ -1,4 +1,4 @@
-const subscribeSchema = {
+export const subscribeSchema = {
   body: {
     type: 'object',
     required: ['subscription'],
@@ -7,5 +7,3 @@ const subscribeSchema = {
     },
   },
 };
-
-export { subscribeSchema };

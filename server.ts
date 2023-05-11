@@ -4,7 +4,7 @@ import cors from '@fastify/cors';
 import websocket from '@fastify/websocket';
 import * as webPush from 'web-push';
 
-import { Logger, LogLevel } from "src/types/Logger";
+import { Logger, LogLevel } from 'src/types/Logger';
 
 const fastify = Fastify({
   logger: {
@@ -14,9 +14,11 @@ const fastify = Fastify({
 
 async function main() {
   await fastify.register(import('./config'));
-  Logger.info('Config', `Running in ${LogLevel.info(fastify.config.mode)} mode`);
+  Logger.info(
+    'Config',
+    `Running in ${LogLevel.info(fastify.config.mode)} mode`
+  );
   await fastify.register(cors, {});
-  // noinspection JSUnusedGlobalSymbols
   await fastify.register(websocket, {
     errorHandler: function (error, conn, req, reply) {
       console.log(error);
@@ -47,9 +49,7 @@ main().catch((errors) => {
       const module = 'Config';
       const reason =
         LogLevel.warning(`${error.message}`) +
-        (error.instancePath
-          ? ' at ' + LogLevel.link(error.instancePath)
-          : '');
+        (error.instancePath ? ' at ' + LogLevel.link(error.instancePath) : '');
       if (
         error.instancePath === '/vapid/private_key' ||
         error.instancePath === '/vapid/public_key'
