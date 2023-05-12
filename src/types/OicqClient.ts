@@ -1,4 +1,4 @@
-import { createClient } from 'icqq';
+import { createClient, Friend,  Group, Message } from "icqq";
 import { Client } from 'icqq/lib/client';
 import { Platform } from 'icqq/lib/core';
 import {
@@ -7,23 +7,34 @@ import {
   PrivateMessageEvent,
 } from 'icqq/lib/events';
 
-import { WsConnection } from './WsConnection';
-import { OicqAccount, UserId, WsId } from './common';
-import { ClientState } from './ClientState';
-import { WsSuccessResponse } from './WsSuccessResponse';
-import { WsAction } from './WsAction';
-import { WsFailureResponse } from './WsFailureResponse';
-import { WsResponse } from './WsResponse';
+import {
+  FriendCache,
+  GroupCache,
+  newFriendCache,
+  newGroupCache
+} from "src/types/caches";
+import { OicqAccount, UserId, WsId } from 'src/types/common';
+import { ClientState } from 'src/types/ClientState';
+import { WsAction } from 'src/types/WsAction';
+import { WsConnection } from 'src/types/WsConnection';
+import { WsFailureResponse } from 'src/types/WsFailureResponse';
+import { WsResponse } from 'src/types/WsResponse';
+import { WsSuccessResponse } from 'src/types/WsSuccessResponse';
+import { Logger } from 'src/types/Logger';
+import { ClientInfo, FriendData, GroupData } from 'src/types/ClientInfo';
 
 export class OicqClient {
   readonly account: OicqAccount;
   state: ClientState;
   private allowedUsers: UserId[] = [];
-  private client: Client;
-  private connectionMap: Map<WsId, WsConnection> = new Map<
-    WsId,
-    WsConnection
-  >();
+  private readonly client: Client;
+  private connectionMap = new Map<WsId, WsConnection>();
+
+  private friendCaches = new Map<number, FriendCache>();
+  private groupCaches = new Map<number, GroupCache>();
+
+  private friendList = new Map<number, Friend>();
+  private groupList = new Map<number, Group>();
 
   constructor(platform: Platform, account: OicqAccount) {
     this.client = createClient({ log_level: 'warn', platform: platform });
@@ -35,7 +46,12 @@ export class OicqClient {
       (
         event: PrivateMessageEvent | GroupMessageEvent | DiscussMessageEvent
       ) => {
-        this.broadcast(new WsSuccessResponse(WsAction.Message, event));
+        this.broadcast(
+          new WsSuccessResponse(WsAction.Message, {
+            account: this.account,
+            message: event as Message,
+          })
+        );
       }
     );
 
@@ -67,8 +83,38 @@ export class OicqClient {
 
     this.client.on('system.online', () => {
       this.state = ClientState.Online;
+      Logger.info('OICQ', `[${this.account}] Loading friend info...`);
+      this.client.fl.forEach((friendInfo) => {
+        if (!this.friendList.has(friendInfo.user_id)) {
+          this.friendList.set(
+            friendInfo.user_id,
+            this.client.pickFriend(friendInfo.user_id)
+          );
+        }
+        if (!this.friendCaches.has(friendInfo.user_id)) {
+          newFriendCache(this.friendList.get(friendInfo.user_id)!).then(
+            (friendCache) =>
+              this.friendCaches.set(friendInfo.user_id, friendCache)
+          );
+        }
+      });
+      Logger.info('OICQ', `[${this.account}] Loading group info...`);
+      this.client.gl.forEach((groupInfo) => {
+        if (!this.groupList.has(groupInfo.group_id)) {
+          this.groupList.set(
+            groupInfo.group_id,
+            this.client.pickGroup(groupInfo.group_id)
+          );
+        }
+        if (!this.groupCaches.has(groupInfo.group_id)) {
+          newGroupCache(this.groupList.get(groupInfo.group_id)!).then(
+            (groupCache) => this.groupCaches.set(groupInfo.group_id, groupCache)
+          );
+        }
+      });
       this.broadcast(new WsSuccessResponse(WsAction.Login));
     });
+
     this.client.on('system.offline.kickoff', ({ message }) => {
       this.state = ClientState.Offline;
       this.broadcast(
@@ -155,5 +201,39 @@ export class OicqClient {
     this.connectionMap.forEach((connection) => {
       connection.respond(wsResponse);
     });
+  }
+
+  getInfo(): ClientInfo {
+    return {
+      account:this.client.uin,
+      status:this.client.status,
+      nickname:this.client.nickname,
+      sex:this.client.sex,
+      age:this.client.age,
+      friendList: Array.from(this.client.fl).map(([id, friend]) => {
+        const friendCache = this.friendCaches.get(id);
+        if (!friendCache) {
+          newFriendCache(this.friendList.get(id)!).then((friendCache) =>
+            this.friendCaches.set(id, friendCache)
+          );
+        }
+        return <FriendData>{
+          ...friend,
+          ...friendCache,
+        };
+      }),
+      groupList: Array.from(this.client.gl).map(([id, group]) => {
+        const groupCache = this.groupCaches.get(id);
+        if (!groupCache) {
+          newGroupCache(this.groupList.get(id)!).then((groupCache) =>
+            this.groupCaches.set(id, groupCache)
+          );
+        }
+        return <GroupData>{
+          ...group,
+          ...groupCache,
+        };
+      }),
+    };
   }
 }

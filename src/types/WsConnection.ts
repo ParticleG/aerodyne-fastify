@@ -46,6 +46,7 @@ export class WsConnection {
     this.handlerMap.set(WsAction.Subscribe, this.subscribeHandler);
     this.handlerMap.set(WsAction.Login, this.loginHandler);
     this.handlerMap.set(WsAction.Message, this.messageHandler);
+    this.handlerMap.set(WsAction.ClientInfo, this.clientInfoHandler);
   }
 
   subscribe(client: OicqClient) {
@@ -120,5 +121,24 @@ export class WsConnection {
   private async messageHandler(wsMessage: WsRequest) {
     const wsResponse = WsSuccessResponse.fromRequest(wsMessage);
     this.respond(wsResponse);
+  }
+
+  private async clientInfoHandler(wsMessage: WsRequest) {
+    const { account } = wsMessage.data;
+    const client = this.clientMap.get(account);
+    if (client === undefined) {
+      this.respond(
+        WsFailureResponse.fromRequest(wsMessage, 'Client not found', [
+          'Subscribe to the account first',
+        ])
+      );
+      return;
+    }
+    try {
+      this.respond(WsSuccessResponse.fromRequest(wsMessage, client.getInfo()));
+    } catch (error) {
+      console.log(error);
+      this.respond(error as WsFailureResponse);
+    }
   }
 }

@@ -63,6 +63,16 @@ dataValidators.set(
     message: string;
   }>)
 );
+dataValidators.set(
+  WsAction.ClientInfo,
+  ajv.compile({
+    properties: {
+      account: { type: 'uint32' },
+    },
+  } as JTDSchemaType<{
+    account: number;
+  }>)
+);
 
 Object.values(WsAction).forEach((action) => {
   if (!dataValidators.has(action)) {
