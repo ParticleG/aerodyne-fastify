@@ -58,7 +58,7 @@ class ClientManager {
   connectClient(
     wsConnection: WsConnection,
     account: OicqAccount
-  ): { account: OicqAccount; state: ClientState } | undefined {
+  ): ClientState| undefined {
     if (!this.clientMap.has(account)) {
       this.clientMap.set(
         account,

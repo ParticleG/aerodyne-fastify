@@ -18,7 +18,7 @@ export class WsFailureResponse extends WsResponse {
     super('failure', action, account);
     this.data = {
       message: message || 'Unknown error',
-      reasons: reasons,
+      reasons: reasons ?? [],
     };
   }
 

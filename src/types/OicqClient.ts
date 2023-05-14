@@ -47,7 +47,7 @@ export class OicqClient {
         event: PrivateMessageEvent | GroupMessageEvent | DiscussMessageEvent
       ) => {
         this.broadcast(
-          new WsSuccessResponse(WsAction.Message, {
+          new WsSuccessResponse(WsAction.Message, this.account, {
             account: this.account,
             message: event as Message,
           })
@@ -60,22 +60,37 @@ export class OicqClient {
       (event: { url: string; phone: string }) => {
         this.state = ClientState.WaitingSmsCode;
         this.client.sendSmsCode();
-        this.broadcast(new WsSuccessResponse(WsAction.Login, event));
+        this.broadcast(
+          new WsSuccessResponse(WsAction.Login, this.account, {
+            state: this.state,
+            ...event,
+          })
+        );
       }
     );
     this.client.on('system.login.qrcode', (event: { image: Buffer }) => {
       this.state = ClientState.WaitingQRCode;
-      this.broadcast(new WsSuccessResponse(WsAction.Login, event));
+      this.broadcast(
+        new WsSuccessResponse(WsAction.Login, this.account, {
+          state: this.state,
+          ...event,
+        })
+      );
     });
     this.client.on('system.login.slider', (event: { url: string }) => {
       this.state = ClientState.WaitingSlider;
-      this.broadcast(new WsSuccessResponse(WsAction.Login, event));
+      this.broadcast(
+        new WsSuccessResponse(WsAction.Login, this.account, {
+          state: this.state,
+          ...event,
+        })
+      );
     });
     this.client.on('system.login.error', ({ code, message }) => {
       this.state = ClientState.Initializing;
 
       this.broadcast(
-        new WsFailureResponse(WsAction.Login, message, [
+        new WsFailureResponse(WsAction.Login, this.account, message, [
           JSON.stringify({ code: code }),
         ])
       );
@@ -118,13 +133,17 @@ export class OicqClient {
     this.client.on('system.offline.kickoff', ({ message }) => {
       this.state = ClientState.Offline;
       this.broadcast(
-        new WsFailureResponse(WsAction.Logout, message, ['Kicked off'])
+        new WsFailureResponse(WsAction.Logout, this.account, message, [
+          'Kicked off',
+        ])
       );
     });
     this.client.on('system.offline.network', ({ message }) => {
       this.state = ClientState.Offline;
       this.broadcast(
-        new WsFailureResponse(WsAction.Logout, message, ['Network'])
+        new WsFailureResponse(WsAction.Logout, this.account, message, [
+          'Network',
+        ])
       );
     });
   }
@@ -136,9 +155,7 @@ export class OicqClient {
     return wsConnection.userId in this.allowedUsers;
   }
 
-  subscribe(
-    wsConnection: WsConnection
-  ): { account: OicqAccount; state?: ClientState } {
+  subscribe(wsConnection: WsConnection): ClientState | undefined {
     if (this.validate(wsConnection)) {
       this.connectionMap.set(wsConnection.wsId, wsConnection);
       wsConnection.subscribe(this);
@@ -146,9 +163,8 @@ export class OicqClient {
         "[Subscribe]Client's subscriber map size: ",
         this.connectionMap.size
       );
-      return { account: this.account, state: this.state };
+      return this.state;
     }
-    return { account: this.account };
   }
 
   unsubscribe(wsId: WsId) {
@@ -167,9 +183,12 @@ export class OicqClient {
       }
       case ClientState.WaitingSmsCode: {
         if (!payload) {
-          throw new WsFailureResponse(WsAction.Login, 'Missing sms code', [
-            JSON.stringify({ state: this.state }),
-          ]);
+          throw new WsFailureResponse(
+            WsAction.Login,
+            this.account,
+            'Missing sms code',
+            [JSON.stringify({ state: this.state })]
+          );
         }
         this.client.submitSmsCode(payload.trim()).then();
         break;
@@ -180,17 +199,23 @@ export class OicqClient {
       }
       case ClientState.WaitingSlider: {
         if (!payload) {
-          throw new WsFailureResponse(WsAction.Login, 'Missing login ticket', [
-            JSON.stringify({ state: this.state }),
-          ]);
+          throw new WsFailureResponse(
+            WsAction.Login,
+            this.account,
+            'Missing login ticket',
+            [JSON.stringify({ state: this.state })]
+          );
         }
         this.client.submitSlider(payload.trim()).then();
         break;
       }
       case ClientState.Online: {
-        throw new WsFailureResponse(WsAction.Login, 'Already online', [
-          JSON.stringify({ state: this.state }),
-        ]);
+        throw new WsFailureResponse(
+          WsAction.Login,
+          this.account,
+          'Already online',
+          [JSON.stringify({ state: this.state })]
+        );
       }
     }
   }

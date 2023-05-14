@@ -1,17 +1,17 @@
-import { v4 as uuid } from 'uuid';
-import { RawData, WebSocket } from 'ws';
+import { v4 as uuid } from "uuid";
+import { RawData, WebSocket } from "ws";
 
-import { OicqClient } from './OicqClient';
-import { ClientManager } from './ClientManager';
-import { OicqAccount, UserId, WsId } from './common';
-import { WsRequest } from './WsRequest';
-import { WsAction } from './WsAction';
-import { WsResponse } from './WsResponse';
-import { parseWsMessage } from '../utils/validator';
-import { WsSuccessResponse } from './WsSuccessResponse';
-import { WsFailureResponse } from './WsFailureResponse';
-import { getSystemInfo } from 'src/utils/common';
-import { Logger, LogLevel } from 'src/types/Logger';
+import { OicqClient } from "./OicqClient";
+import { ClientManager } from "./ClientManager";
+import { OicqAccount, UserId, WsId } from "./common";
+import { WsRequest } from "./WsRequest";
+import { WsAction } from "./WsAction";
+import { WsResponse } from "./WsResponse";
+import { parseWsMessage } from "../utils/validator";
+import { WsSuccessResponse } from "./WsSuccessResponse";
+import { WsFailureResponse } from "./WsFailureResponse";
+import { getSystemInfo } from "src/utils/common";
+import { Logger, LogLevel } from "src/types/Logger";
 
 type MessageHandler = (wsMessage: WsRequest) => Promise<void>;
 type ClientMap = Map<OicqAccount, OicqClient | undefined>;
@@ -28,15 +28,15 @@ export class WsConnection {
     this.userId = userId;
     this.socket = ws;
 
-    this.socket.on('message', async (message) => {
+    this.socket.on("message", async (message) => {
       await this.handleMessage(message);
     });
-    this.socket.on('close', () => {
+    this.socket.on("close", () => {
       this.clientMap.forEach((client) => {
         client?.unsubscribe(this.wsId);
       });
       Logger.info(
-        'OICQ',
+        "OICQ",
         `Connection closed for userId: ${LogLevel.info(userId)}`
       );
     });
@@ -58,7 +58,7 @@ export class WsConnection {
   }
 
   respond(wsResponse: WsResponse) {
-    if (wsResponse.result === 'error') {
+    if (wsResponse.result === "error") {
       this.socket.close(1011, wsResponse.toString());
     } else {
       this.socket.send(wsResponse.toString());
@@ -76,13 +76,13 @@ export class WsConnection {
 
   private async monitorHandler(wsMessage: WsRequest) {
     this.respond(
-      WsSuccessResponse.fromRequest(wsMessage, await getSystemInfo())
+      WsSuccessResponse.fromRequest(wsMessage, undefined, await getSystemInfo())
     );
   }
 
   private async listHandler(wsMessage: WsRequest) {
     this.respond(
-      WsSuccessResponse.fromRequest(wsMessage, ClientManager.listClients())
+      WsSuccessResponse.fromRequest(wsMessage, undefined, ClientManager.listClients())
     );
   }
 
@@ -90,11 +90,11 @@ export class WsConnection {
     const { account } = wsMessage.data;
     const result = ClientManager.connectClient(this, account);
     if (result) {
-      this.respond(WsSuccessResponse.fromRequest(wsMessage, result));
+      this.respond(WsSuccessResponse.fromRequest(wsMessage, account, result));
     } else {
       this.respond(
-        WsFailureResponse.fromRequest(wsMessage, 'Validate failed', [
-          'Please check the account',
+        WsFailureResponse.fromRequest(wsMessage, account, "Validate failed", [
+          "Please check the account"
         ])
       );
     }
@@ -105,8 +105,8 @@ export class WsConnection {
     const client = this.clientMap.get(account);
     if (client === undefined) {
       this.respond(
-        WsFailureResponse.fromRequest(wsMessage, 'Client not found', [
-          'Subscribe to the account first',
+        WsFailureResponse.fromRequest(wsMessage, account, "Client not found", [
+          "Subscribe to the account first"
         ])
       );
       return;
@@ -128,14 +128,14 @@ export class WsConnection {
     const client = this.clientMap.get(account);
     if (client === undefined) {
       this.respond(
-        WsFailureResponse.fromRequest(wsMessage, 'Client not found', [
-          'Subscribe to the account first',
+        WsFailureResponse.fromRequest(wsMessage, account, "Client not found", [
+          "Subscribe to the account first"
         ])
       );
       return;
     }
     try {
-      this.respond(WsSuccessResponse.fromRequest(wsMessage, client.getInfo()));
+      this.respond(WsSuccessResponse.fromRequest(wsMessage, account, client.getInfo()));
     } catch (error) {
       console.log(error);
       this.respond(error as WsFailureResponse);
