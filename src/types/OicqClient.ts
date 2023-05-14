@@ -1,4 +1,4 @@
-import { createClient, Friend,  Group, Message } from "icqq";
+import { createClient, Friend, Group, Message } from 'icqq';
 import { Client } from 'icqq/lib/client';
 import { Platform } from 'icqq/lib/core';
 import {
@@ -11,8 +11,8 @@ import {
   FriendCache,
   GroupCache,
   newFriendCache,
-  newGroupCache
-} from "src/types/caches";
+  newGroupCache,
+} from 'src/types/caches';
 import { OicqAccount, UserId, WsId } from 'src/types/common';
 import { ClientState } from 'src/types/ClientState';
 import { WsAction } from 'src/types/WsAction';
@@ -136,7 +136,9 @@ export class OicqClient {
     return wsConnection.userId in this.allowedUsers;
   }
 
-  subscribe(wsConnection: WsConnection): ClientState | undefined {
+  subscribe(
+    wsConnection: WsConnection
+  ): { account: OicqAccount; state?: ClientState } {
     if (this.validate(wsConnection)) {
       this.connectionMap.set(wsConnection.wsId, wsConnection);
       wsConnection.subscribe(this);
@@ -144,9 +146,9 @@ export class OicqClient {
         "[Subscribe]Client's subscriber map size: ",
         this.connectionMap.size
       );
-      return this.state;
+      return { account: this.account, state: this.state };
     }
-    return undefined;
+    return { account: this.account };
   }
 
   unsubscribe(wsId: WsId) {
@@ -205,11 +207,11 @@ export class OicqClient {
 
   getInfo(): ClientInfo {
     return {
-      account:this.client.uin,
-      status:this.client.status,
-      nickname:this.client.nickname,
-      sex:this.client.sex,
-      age:this.client.age,
+      account: this.client.uin,
+      status: this.client.status,
+      nickname: this.client.nickname,
+      sex: this.client.sex,
+      age: this.client.age,
       friendList: Array.from(this.client.fl).map(([id, friend]) => {
         const friendCache = this.friendCaches.get(id);
         if (!friendCache) {

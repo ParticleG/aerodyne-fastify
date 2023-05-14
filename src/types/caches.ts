@@ -1,4 +1,4 @@
-import { Anonymous, Friend, Group, MemberInfo } from "icqq";
+import { Anonymous, Friend, Group, MemberInfo } from 'icqq';
 
 export class FriendCache {
   lastUpdate: Date = new Date();
