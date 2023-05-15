@@ -1,4 +1,4 @@
-import { createClient, Friend, Group, Message } from 'icqq';
+import { createClient, Friend, Group } from 'icqq';
 import { Client } from 'icqq/lib/client';
 import { Platform } from 'icqq/lib/core';
 import {
@@ -8,6 +8,7 @@ import {
 } from 'icqq/lib/events';
 
 import { ClientInfo, FriendData, GroupData } from 'types/ClientInfo';
+import { newOicqMessage } from 'types/OicqMessage';
 import { WsConnection } from 'types/WsConnection';
 import {
   FriendCache,
@@ -64,7 +65,7 @@ export class OicqClient {
           new WsSuccessResponse(
             WsAction.Message,
             this.account,
-            event as Message
+            newOicqMessage(event)
           )
         );
       }
