@@ -33,7 +33,7 @@ const sharedProperties = (
     additionalProperties: false,
   };
   if (hasAccount) {
-    result.properties.account = { type: 'uint32' };
+    result.properties.account = { type: 'float64' };
   }
   if (optionalProperties) {
     result.optionalProperties = optionalProperties;
@@ -43,7 +43,7 @@ const sharedProperties = (
 
 const WsMessageParser = ajv.compileParser(
   sharedProperties(false, null, {
-    account: { type: 'uint32' },
+    account: { type: 'float64' },
     data: { nullable: true },
   }) as JTDSchemaType<WsRequest>
 );
