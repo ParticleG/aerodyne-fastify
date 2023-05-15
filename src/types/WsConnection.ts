@@ -18,6 +18,7 @@ import {
 } from 'types/websocket';
 import { getSystemInfo } from 'utils/common';
 import { parseWsMessage } from 'utils/validator';
+import * as console from "console";
 
 type MessageHandler = (wsMessage: any) => Promise<void>;
 

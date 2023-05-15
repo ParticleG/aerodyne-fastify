@@ -21,6 +21,7 @@ import {
   WsResponse,
   WsSuccessResponse,
 } from 'types/websocket';
+import { getAvatarUrl } from 'utils/common';
 
 export class OicqClient {
   readonly account: OicqAccount;
@@ -60,10 +61,11 @@ export class OicqClient {
         event: PrivateMessageEvent | GroupMessageEvent | DiscussMessageEvent
       ) => {
         this.broadcast(
-          new WsSuccessResponse(WsAction.Message, this.account, {
-            account: this.account,
-            message: event as Message,
-          })
+          new WsSuccessResponse(
+            WsAction.Message,
+            this.account,
+            event as Message
+          )
         );
       }
     );
@@ -143,7 +145,7 @@ export class OicqClient {
         }
       }
       // TODO: Implement cache update
-      this.broadcast(new WsSuccessResponse(WsAction.Login));
+      this.broadcast(new WsSuccessResponse(WsAction.Login, this.account));
     });
 
     this.client.on('system.offline.kickoff', ({ message }) => {
@@ -252,42 +254,41 @@ export class OicqClient {
   }
 
   async getInfo(): Promise<ClientInfo> {
+    let friends: Record<number, FriendData> = {};
+    let groups: Record<number, GroupData> = {};
+    for (const [id, friendInfo] of this.client.fl) {
+      if (!this.friendCaches.has(id)) {
+        this.friendCaches.set(
+          id,
+          await newFriendCache(this.friendList.get(id)!)
+        );
+      }
+      const friendCache = this.friendCaches.get(id)!;
+      friends[id] = <FriendData>{
+        ...friendInfo,
+        ...friendCache,
+      };
+    }
+    for (const [id, groupInfo] of this.client.gl) {
+      if (!this.groupCaches.has(id)) {
+        this.groupCaches.set(id, await newGroupCache(this.groupList.get(id)!));
+      }
+      const groupCache = this.groupCaches.get(id)!;
+      groups[id] = <GroupData>{
+        ...groupInfo,
+        ...groupCache,
+      };
+    }
     return {
       account: this.client.uin,
+      state: this.state,
+      avatarUrl: getAvatarUrl(this.client.uin),
       status: this.client.status,
       nickname: this.client.nickname,
       sex: this.client.sex,
       age: this.client.age,
-      friendList: await Promise.all(
-        Array.from(this.client.fl).map(async ([id, friendInfo]) => {
-          if (!this.friendCaches.has(id)) {
-            this.friendCaches.set(
-              id,
-              await newFriendCache(this.friendList.get(id)!)
-            );
-          }
-          const friendCache = this.friendCaches.get(id)!;
-          return <FriendData>{
-            ...friendInfo,
-            ...friendCache,
-          };
-        })
-      ),
-      groupList: await Promise.all(
-        Array.from(this.client.gl).map(async ([id, group]) => {
-          if (!this.groupCaches.has(id)) {
-            this.groupCaches.set(
-              id,
-              await newGroupCache(this.groupList.get(id)!)
-            );
-          }
-          const groupCache = this.groupCaches.get(id)!;
-          return <GroupData>{
-            ...group,
-            ...groupCache,
-          };
-        })
-      ),
+      friends: friends,
+      groups: groups,
     };
   }
 }

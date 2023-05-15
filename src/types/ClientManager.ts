@@ -12,7 +12,7 @@ class ClientMap extends Map<OicqAccount, OicqClient> {}
 
 class ClientManager {
   private clientMap = new ClientMap();
-  private dataDir = resolve(join(process.cwd(), 'data'));
+  private dataDir = resolve(join(__dirname, '../../data'));
 
   constructor() {
     Logger.info(
