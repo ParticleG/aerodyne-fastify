@@ -2,8 +2,24 @@ import { DiscussMessage, GroupMessage, PrivateMessage } from 'icqq';
 import { MessageElem } from 'icqq/lib/message/elements';
 import { Anonymous } from 'icqq/lib/message/message';
 import { GroupRole } from 'icqq/lib/common';
+import { getAvatarUrl } from 'utils/common';
 
-interface OicqDiscussMessage {
+interface OicqSharedMessage {
+  type: 'discuss' | 'group' | 'private';
+  timestamp: number;
+  avatarUrl: string;
+  components: MessageElem[];
+  messageRaw: string;
+  font: string;
+  messageId: string;
+  seq: number;
+  rand: number;
+  packetNo: number;
+  index: number;
+  div: number;
+}
+
+interface OicqDiscussMessage extends OicqSharedMessage {
   type: 'discuss';
   ping: false | 'me';
   sender: {
@@ -13,7 +29,7 @@ interface OicqDiscussMessage {
   };
 }
 
-interface OicqGroupMessage {
+interface OicqGroupMessage extends OicqSharedMessage {
   type: 'group';
   subType: 'normal' | 'anonymous';
   anonymous: Anonymous | null;
@@ -29,7 +45,7 @@ interface OicqGroupMessage {
   };
 }
 
-interface OicqPrivateMessage {
+interface OicqPrivateMessage extends OicqSharedMessage {
   type: 'private';
   subType: 'group' | 'friend' | 'other' | 'self';
   fromId: number;
@@ -42,10 +58,11 @@ interface OicqPrivateMessage {
   };
 }
 
-class OicqMessage {
+class OicqMessage implements OicqSharedMessage {
   // Public properties
   type: 'discuss' | 'group' | 'private';
   timestamp: number;
+  avatarUrl: string;
   components: MessageElem[];
   messageRaw: string;
   font: string;
@@ -61,6 +78,7 @@ class OicqMessage {
   sender: {
     userId: number;
     nickname: string;
+    avatarUrl: string;
     card?: string;
     level?: number;
     role?: GroupRole;
@@ -90,17 +108,20 @@ class OicqMessage {
     this.sender = {
       userId: message.sender.user_id,
       nickname: message.sender.nickname,
+      avatarUrl: getAvatarUrl(message.sender.user_id),
     };
     switch (message.message_type) {
       case 'discuss':
         this.id = message.discuss_id;
         this.name = message.discuss_name;
+        this.avatarUrl = getAvatarUrl(message.discuss_id);
         this.sender.card = message.sender.card;
         this.ping = message.atme ? 'me' : false;
         break;
       case 'group':
         this.id = message.group_id;
         this.name = message.group_name;
+        this.avatarUrl = getAvatarUrl(message.group_id);
         this.sender.card = message.sender.card;
         this.sender.level = message.sender.level;
         this.sender.role = message.sender.role;
@@ -113,6 +134,7 @@ class OicqMessage {
       case 'private':
         this.id = message.sender.user_id;
         this.name = message.sender.nickname;
+        this.avatarUrl = getAvatarUrl(message.sender.user_id);
         this.sender.groupId = message.sender.group_id;
         this.sender.discussId = message.sender.discuss_id;
         this.subType = message.sub_type;
