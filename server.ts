@@ -1,10 +1,9 @@
 import { ErrorObject } from 'ajv/lib/types';
 import Fastify from 'fastify';
-import cors from '@fastify/cors';
-import websocket from '@fastify/websocket';
 import * as webPush from 'web-push';
 
-import { Logger, LogLevel } from 'src/types/Logger';
+import { ClientManager } from "types/ClientManager";
+import { Logger, LogLevel } from 'types/Logger';
 
 const fastify = Fastify({
   logger: {
@@ -13,22 +12,19 @@ const fastify = Fastify({
 });
 
 async function main() {
-  await fastify.register(import('./config'));
-  Logger.info(
-    'Config',
-    `Running in ${LogLevel.info(fastify.config.mode)} mode`
-  );
-  await fastify.register(cors, {});
-  await fastify.register(websocket, {
-    errorHandler: function (error, conn, req, reply) {
-      console.log(error);
-      console.log(conn);
-      console.log(req);
-      console.log(reply);
-    },
-  });
-  fastify.register(import('./src/app'), fastify.config);
+  Logger.info('Config', `Loading server configs...`);
 
+  await fastify.register(import('fastify-graceful-shutdown'));
+  fastify.gracefulShutdown((signal, next) => {
+    console.log(signal);
+    ClientManager.shutdown();
+    next();
+  });
+  await fastify.register(import('@fastify/cors'));
+  await fastify.register(import('@fastify/websocket'));
+  await fastify.register(import('app/config'));
+
+  fastify.register(import('app/src/app'), fastify.config);
   fastify.listen(
     {
       host: fastify.config.server.host,
@@ -40,6 +36,17 @@ async function main() {
         process.exit(1);
       }
     }
+  );
+
+  // noinspection HttpUrlsUsage
+  Logger.info(
+    'Config',
+    `Server is running in ${LogLevel.info(
+      fastify.config.mode
+    )} mode, listening on ` +
+      LogLevel.info(
+        `http://${fastify.config.server.host}:${fastify.config.server.port}`
+      )
   );
 }
 

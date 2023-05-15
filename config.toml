@@ -1,9 +1,11 @@
 # This is a TOML document
 
+# "single" or "multiple", multiple mode needs SSL certificate
 mode = "single"
 
 [server]
 close_delay = 500
+# Use intranet for "single" mode, and extranet for "multiple" mode
 host = "localhost"
 port = 3000
 

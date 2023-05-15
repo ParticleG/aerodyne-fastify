@@ -1,13 +1,31 @@
 {
     "extends": "fastify-tsconfig",
     "compilerOptions": {
-        "outDir": "dist",
+        "baseUrl": ".",
         "paths": {
-            "src/*": ["./src/*"]
+            "plugins/*": [
+                "./src/plugins/*"
+            ],
+            "routes/*": [
+                "./src/routes/*"
+            ],
+            "statics/*": [
+                "./src/statics/*"
+            ],
+            "types/*": [
+                "./src/types/*"
+            ],
+            "utils/*": [
+                "./src/utils/*"
+            ],
+            "app/*": [
+                "./*"
+            ]
         },
-        "sourceMap": true
+        "outDir": "dist"
     },
     "include": [
+        "config.ts",
         "server.ts",
         "src/**/*.ts"
     ]

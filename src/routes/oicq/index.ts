@@ -4,11 +4,11 @@ import {
   sliderGetSchema,
   sliderPostSchema,
   sliderPostType,
-} from 'src/routes/oicq/schema';
-import { sliderHtml } from 'src/statics/sliderHtml';
-import { WsConnection } from 'src/types/WsConnection';
-import { Logger, LogLevel } from 'src/types/Logger';
-import { ClientManager } from 'src/types/ClientManager';
+} from 'routes/oicq/schema';
+import { sliderHtml } from 'statics/sliderHtml';
+import { ClientManager } from 'types/ClientManager';
+import { WsConnection } from 'types/WsConnection';
+import { Logger, LogLevel } from 'types/Logger';
 
 export default <FastifyPluginAsync>(async (fastify): Promise<void> => {
   fastify.get('/', { websocket: true }, async (connection, request) => {

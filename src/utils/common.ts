@@ -1,4 +1,3 @@
-import { createHash } from 'crypto';
 import { cpu, mem, os } from 'node-os-utils';
 
 async function getSystemInfo() {
@@ -18,8 +17,4 @@ async function getSystemInfo() {
   };
 }
 
-function md5(text: string) {
-  return createHash('md5').update(text).digest('hex');
-}
-
-export { getSystemInfo, md5 };
+export { getSystemInfo };

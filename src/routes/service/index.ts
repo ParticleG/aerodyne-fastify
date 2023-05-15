@@ -1,6 +1,7 @@
 import { FastifyPluginAsync } from 'fastify';
 import * as webPush from 'web-push';
-import { subscribeSchema } from './schema';
+
+import { subscribeSchema } from 'routes/service/schema';
 
 export default <FastifyPluginAsync>(async (fastify): Promise<void> => {
   webPush.setVapidDetails(

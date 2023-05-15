@@ -1,28 +1,26 @@
-import { mkdirSync, readdirSync } from 'fs';
+import { mkdirSync, readdirSync, writeFileSync } from 'fs';
 import { Platform } from 'icqq';
 import { join, resolve } from 'path';
 
+import { Logger, LogLevel } from 'src/types/Logger';
 import { OicqClient } from 'src/types/OicqClient';
 import { WsConnection } from 'src/types/WsConnection';
-import { Logger, LogLevel } from 'src/types/Logger';
-import { OicqAccount } from 'src/types/common';
-import { ClientState } from 'src/types/ClientState';
-
-type ClientMapType = Map<OicqAccount, OicqClient>;
+import { FriendCache, GroupCache } from 'types/caches';
+import { ClientState, OicqAccount, UserId } from 'src/types/common';
 
 class ClientMap extends Map<OicqAccount, OicqClient> {}
 
 class ClientManager {
-  private clientMap: ClientMapType = new ClientMap();
+  private clientMap = new ClientMap();
+  private dataDir = resolve(join(process.cwd(), 'data'));
 
   constructor() {
-    const dataDir = resolve(join(process.cwd(), 'data'));
     Logger.info(
       'UserManager',
-      'Scanning client tokens in ' + LogLevel.link(dataDir)
+      'Scanning client tokens in ' + LogLevel.link(this.dataDir)
     );
     try {
-      const accounts = readdirSync(dataDir)
+      const accounts = readdirSync(this.dataDir)
         .filter((file) => {
           return file.match(/.*_(token?)/gi);
         })
@@ -51,14 +49,27 @@ class ClientManager {
       }
     } catch (_) {
       Logger.warn('UserManager', 'Data directory not found, create one');
-      mkdirSync(dataDir);
+      mkdirSync(this.dataDir);
     }
+  }
+
+  shutdown() {
+    const result: {
+      groupCaches: Map<number, GroupCache>;
+      friendCaches: Map<number, FriendCache>;
+      allowedUsers: UserId[];
+      account: number;
+    }[] = [];
+    this.clientMap.forEach((client) => {
+      result.push(client.shutdown());
+    });
+    writeFileSync(this.dataDir + '/clients.json', JSON.stringify(result));
   }
 
   connectClient(
     wsConnection: WsConnection,
     account: OicqAccount
-  ): ClientState| undefined {
+  ): ClientState | undefined {
     if (!this.clientMap.has(account)) {
       this.clientMap.set(
         account,

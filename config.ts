@@ -1,10 +1,29 @@
 import Ajv from 'ajv';
-import { readFileSync } from 'fs';
 import fastifyPlugin from 'fastify-plugin';
+import { readFileSync } from 'fs';
 import { join, resolve } from 'path';
 import { parse } from 'toml';
 
+import { isExtranet, isIntranet } from 'utils/regex';
+
 const ajv = new Ajv();
+
+ajv.addKeyword({
+  keyword: 'hostCheck',
+  modifying: false,
+  schema: false,
+  validate: (
+    data: string,
+    { rootData: { mode } }: { rootData: ConfigType }
+  ) => {
+    switch (mode) {
+      case 'single':
+        return isIntranet(data);
+      case 'multiple':
+        return isExtranet(data);
+    }
+  },
+});
 
 type ConfigType = {
   mode: 'single' | 'multiple';
@@ -38,6 +57,7 @@ const validate = ajv.compile({
         host: {
           type: 'string',
           default: 'localhost',
+          hostCheck: true,
         },
         port: {
           type: 'number',

@@ -7,39 +7,52 @@ import {
   PrivateMessageEvent,
 } from 'icqq/lib/events';
 
+import { ClientInfo, FriendData, GroupData } from 'types/ClientInfo';
+import { WsConnection } from 'types/WsConnection';
 import {
   FriendCache,
   GroupCache,
   newFriendCache,
   newGroupCache,
-} from 'src/types/caches';
-import { OicqAccount, UserId, WsId } from 'src/types/common';
-import { ClientState } from 'src/types/ClientState';
-import { WsAction } from 'src/types/WsAction';
-import { WsConnection } from 'src/types/WsConnection';
-import { WsFailureResponse } from 'src/types/WsFailureResponse';
-import { WsResponse } from 'src/types/WsResponse';
-import { WsSuccessResponse } from 'src/types/WsSuccessResponse';
-import { Logger } from 'src/types/Logger';
-import { ClientInfo, FriendData, GroupData } from 'src/types/ClientInfo';
+} from 'types/caches';
+import { ClientState, OicqAccount, UserId, WsAction, WsId } from 'types/common';
+import {
+  WsFailureResponse,
+  WsResponse,
+  WsSuccessResponse,
+} from 'types/websocket';
 
 export class OicqClient {
   readonly account: OicqAccount;
-  state: ClientState;
-  private allowedUsers: UserId[] = [];
+  private readonly allowedUsers: UserId[] = [];
+  private readonly friendCaches = new Map<number, FriendCache>();
+  private readonly groupCaches = new Map<number, GroupCache>();
+
+  private state: ClientState;
   private readonly client: Client;
   private connectionMap = new Map<WsId, WsConnection>();
-
-  private friendCaches = new Map<number, FriendCache>();
-  private groupCaches = new Map<number, GroupCache>();
-
   private friendList = new Map<number, Friend>();
   private groupList = new Map<number, Group>();
 
-  constructor(platform: Platform, account: OicqAccount) {
-    this.client = createClient({ log_level: 'warn', platform: platform });
-    this.state = ClientState.Initializing;
+  constructor(
+    platform: Platform,
+    account: OicqAccount,
+    allowedUsers?: UserId[],
+    friendCaches?: Map<number, FriendCache>,
+    groupCaches?: Map<number, GroupCache>
+  ) {
     this.account = account;
+    this.state = ClientState.Initializing;
+    this.client = createClient({ log_level: 'warn', platform: platform });
+    if (allowedUsers) {
+      this.allowedUsers = allowedUsers;
+    }
+    if (friendCaches) {
+      this.friendCaches = friendCaches;
+    }
+    if (groupCaches) {
+      this.groupCaches = groupCaches;
+    }
 
     this.client.on(
       'message',
@@ -88,7 +101,6 @@ export class OicqClient {
     });
     this.client.on('system.login.error', ({ code, message }) => {
       this.state = ClientState.Initializing;
-
       this.broadcast(
         new WsFailureResponse(WsAction.Login, this.account, message, [
           JSON.stringify({ code: code }),
@@ -96,37 +108,41 @@ export class OicqClient {
       );
     });
 
-    this.client.on('system.online', () => {
+    this.client.on('system.online', async () => {
       this.state = ClientState.Online;
-      Logger.info('OICQ', `[${this.account}] Loading friend info...`);
-      this.client.fl.forEach((friendInfo) => {
-        if (!this.friendList.has(friendInfo.user_id)) {
-          this.friendList.set(
-            friendInfo.user_id,
-            this.client.pickFriend(friendInfo.user_id)
-          );
+      const hasFriendCache = this.friendCaches.size > 0;
+      const hasGroupCache = this.groupCaches.size > 0;
+      for (const [id] of this.client.fl) {
+        if (!this.friendList.has(id)) {
+          this.friendList.set(id, this.client.pickFriend(id));
         }
-        if (!this.friendCaches.has(friendInfo.user_id)) {
-          newFriendCache(this.friendList.get(friendInfo.user_id)!).then(
-            (friendCache) =>
-              this.friendCaches.set(friendInfo.user_id, friendCache)
-          );
+        if (!this.friendCaches.has(id)) {
+          const friend = this.friendList.get(id)!;
+          if (hasFriendCache) {
+            newFriendCache(friend).then((friendCache) =>
+              this.friendCaches.set(id, friendCache)
+            );
+          } else {
+            this.friendCaches.set(id, await newFriendCache(friend));
+          }
         }
-      });
-      Logger.info('OICQ', `[${this.account}] Loading group info...`);
-      this.client.gl.forEach((groupInfo) => {
-        if (!this.groupList.has(groupInfo.group_id)) {
-          this.groupList.set(
-            groupInfo.group_id,
-            this.client.pickGroup(groupInfo.group_id)
-          );
+      }
+      for (const [id] of this.client.gl) {
+        if (!this.groupList.has(id)) {
+          this.groupList.set(id, this.client.pickGroup(id));
         }
-        if (!this.groupCaches.has(groupInfo.group_id)) {
-          newGroupCache(this.groupList.get(groupInfo.group_id)!).then(
-            (groupCache) => this.groupCaches.set(groupInfo.group_id, groupCache)
-          );
+        if (!this.groupCaches.has(id)) {
+          const group = this.groupList.get(id)!;
+          if (hasGroupCache) {
+            newGroupCache(group).then((groupCache) =>
+              this.groupCaches.set(id, groupCache)
+            );
+          } else {
+            this.groupCaches.set(id, await newGroupCache(group));
+          }
         }
-      });
+      }
+      // TODO: Implement cache update
       this.broadcast(new WsSuccessResponse(WsAction.Login));
     });
 
@@ -148,15 +164,20 @@ export class OicqClient {
     });
   }
 
-  validate(wsConnection: WsConnection): boolean {
-    if (this.allowedUsers.length === 0) {
-      this.allowedUsers.push(wsConnection.userId);
-    }
-    return wsConnection.userId in this.allowedUsers;
+  shutdown() {
+    return {
+      account: this.account,
+      allowedUsers: this.allowedUsers,
+      friendCaches: this.friendCaches,
+      groupCaches: this.groupCaches,
+    };
   }
 
   subscribe(wsConnection: WsConnection): ClientState | undefined {
-    if (this.validate(wsConnection)) {
+    if (this.allowedUsers.length === 0) {
+      this.allowedUsers.push(wsConnection.userId);
+    }
+    if (wsConnection.userId in this.allowedUsers) {
       this.connectionMap.set(wsConnection.wsId, wsConnection);
       wsConnection.subscribe(this);
       console.log(
@@ -230,37 +251,43 @@ export class OicqClient {
     });
   }
 
-  getInfo(): ClientInfo {
+  async getInfo(): Promise<ClientInfo> {
     return {
       account: this.client.uin,
       status: this.client.status,
       nickname: this.client.nickname,
       sex: this.client.sex,
       age: this.client.age,
-      friendList: Array.from(this.client.fl).map(([id, friend]) => {
-        const friendCache = this.friendCaches.get(id);
-        if (!friendCache) {
-          newFriendCache(this.friendList.get(id)!).then((friendCache) =>
-            this.friendCaches.set(id, friendCache)
-          );
-        }
-        return <FriendData>{
-          ...friend,
-          ...friendCache,
-        };
-      }),
-      groupList: Array.from(this.client.gl).map(([id, group]) => {
-        const groupCache = this.groupCaches.get(id);
-        if (!groupCache) {
-          newGroupCache(this.groupList.get(id)!).then((groupCache) =>
-            this.groupCaches.set(id, groupCache)
-          );
-        }
-        return <GroupData>{
-          ...group,
-          ...groupCache,
-        };
-      }),
+      friendList: await Promise.all(
+        Array.from(this.client.fl).map(async ([id, friendInfo]) => {
+          if (!this.friendCaches.has(id)) {
+            this.friendCaches.set(
+              id,
+              await newFriendCache(this.friendList.get(id)!)
+            );
+          }
+          const friendCache = this.friendCaches.get(id)!;
+          return <FriendData>{
+            ...friendInfo,
+            ...friendCache,
+          };
+        })
+      ),
+      groupList: await Promise.all(
+        Array.from(this.client.gl).map(async ([id, group]) => {
+          if (!this.groupCaches.has(id)) {
+            this.groupCaches.set(
+              id,
+              await newGroupCache(this.groupList.get(id)!)
+            );
+          }
+          const groupCache = this.groupCaches.get(id)!;
+          return <GroupData>{
+            ...group,
+            ...groupCache,
+          };
+        })
+      ),
     };
   }
 }

@@ -7,9 +7,9 @@
         "test": "test"
     },
     "scripts": {
-        "start": "tsx server.ts",
+        "build": "tsc && tsc-alias",
         "dev": "tsx watch server.ts",
-        "build": "tsc && node dist/server.js",
+        "start": "tsc && tsc-alias && node dist/server.js",
         "format": "prettier --write src/"
     },
     "keywords": [],
@@ -24,25 +24,25 @@
         "chalk": "^4.1.2",
         "date-and-time": "^3.0.0",
         "fastify": "4.17.0",
+        "fastify-graceful-shutdown": "^3.4.0",
         "fastify-plugin": "^4.5.0",
         "icqq": "^0.3.10",
         "node-os-utils": "^1.3.7",
-        "rxdb": "14.11.1",
-        "rxjs": "^7.8.1",
         "toml": "^3.0.0",
         "uuid": "^9.0.0",
         "web-push": "^3.6.1"
     },
     "devDependencies": {
-        "@types/node": "20.1.2",
+        "@types/node": "20.1.4",
         "@types/node-os-utils": "^1.3.1",
-        "@types/tap": "^15.0.8",
         "@types/uuid": "^9.0.1",
         "@types/web-push": "^3.3.2",
         "@types/ws": "^8.5.4",
         "ajv": "^8.12.0",
+        "concurrently": "^8.0.1",
         "fastify-tsconfig": "^1.0.1",
         "prettier": "2.8.8",
+        "tsc-alias": "^1.8.6",
         "tsx": "^3.12.7",
         "typescript": "^5.0.4"
     }

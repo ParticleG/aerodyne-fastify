@@ -1,5 +1,5 @@
-import { FastifyPluginAsync } from 'fastify';
 import AutoLoad from '@fastify/autoload';
+import { FastifyPluginAsync } from 'fastify';
 import { join } from 'path';
 
 const app: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
