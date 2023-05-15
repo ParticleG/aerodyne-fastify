@@ -6,6 +6,8 @@ import { getAvatarUrl } from 'utils/common';
 
 interface OicqSharedMessage {
   type: 'discuss' | 'group' | 'private';
+  id: number;
+  name: string;
   timestamp: number;
   avatarUrl: string;
   components: MessageElem[];
@@ -61,6 +63,8 @@ interface OicqPrivateMessage extends OicqSharedMessage {
 class OicqMessage implements OicqSharedMessage {
   // Public properties
   type: 'discuss' | 'group' | 'private';
+  id: number;
+  name: string;
   timestamp: number;
   avatarUrl: string;
   components: MessageElem[];
@@ -73,8 +77,6 @@ class OicqMessage implements OicqSharedMessage {
   index: number;
   div: number;
   // Type specific properties
-  id: number;
-  name: string;
   sender: {
     userId: number;
     nickname: string;
