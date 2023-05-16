@@ -10,7 +10,7 @@ interface OicqSharedMessage {
   name: string;
   timestamp: number;
   avatarUrl: string;
-  messages: MessageElem[][];
+  components: MessageElem[];
   messageRaw: string;
   font: string;
   messageId: string;
@@ -67,7 +67,7 @@ class OicqMessage implements OicqSharedMessage {
   name: string;
   timestamp: number;
   avatarUrl: string;
-  messages: MessageElem[][];
+  components: MessageElem[];
   messageRaw: string;
   font: string;
   messageId: string;
@@ -98,7 +98,7 @@ class OicqMessage implements OicqSharedMessage {
   constructor(message: DiscussMessage | GroupMessage | PrivateMessage) {
     this.type = message.message_type;
     this.timestamp = message.time * 1000;
-    this.messages = [message.message];
+    this.components = message.message;
     this.messageRaw = message.raw_message;
     this.font = message.font;
     this.messageId = message.message_id;
