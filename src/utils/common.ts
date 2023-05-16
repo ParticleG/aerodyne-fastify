@@ -19,8 +19,8 @@ export async function getSystemInfo() {
 
 export const getAvatarUrl = (
   id: number,
-  size: 0 | 40 | 100 | 140 = 100,
-  type: 'user' | 'group' = 'user'
+  type: 'user' | 'group' = 'user',
+  size: 0 | 40 | 100 | 140 = 100
 ) => {
   switch (type) {
     case 'user':

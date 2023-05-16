@@ -116,14 +116,14 @@ class OicqMessage implements OicqSharedMessage {
       case 'discuss':
         this.id = message.discuss_id;
         this.name = message.discuss_name;
-        this.avatarUrl = getAvatarUrl(message.discuss_id);
+        this.avatarUrl = getAvatarUrl(message.discuss_id, 'group');
         this.sender.card = message.sender.card;
         this.ping = message.atme ? 'me' : false;
         break;
       case 'group':
         this.id = message.group_id;
         this.name = message.group_name;
-        this.avatarUrl = getAvatarUrl(message.group_id);
+        this.avatarUrl = getAvatarUrl(message.group_id, 'group');
         this.sender.card = message.sender.card;
         this.sender.level = message.sender.level;
         this.sender.role = message.sender.role;
@@ -136,7 +136,7 @@ class OicqMessage implements OicqSharedMessage {
       case 'private':
         this.id = message.sender.user_id;
         this.name = message.sender.nickname;
-        this.avatarUrl = getAvatarUrl(message.sender.user_id);
+        this.avatarUrl = getAvatarUrl(message.sender.user_id, 'user');
         this.sender.groupId = message.sender.group_id;
         this.sender.discussId = message.sender.discuss_id;
         this.subType = message.sub_type;

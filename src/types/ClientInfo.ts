@@ -1,6 +1,6 @@
 import { FriendInfo, Gender, GroupInfo, OnlineStatus } from 'icqq';
 import { FriendCache, GroupCache } from 'src/types/caches';
-import { ClientState, OicqAccount } from "src/types/common";
+import { ClientState, OicqAccount } from 'src/types/common';
 
 export interface FriendData extends FriendInfo, FriendCache {}
 
