@@ -8,7 +8,7 @@ import {
 } from 'icqq/lib/events';
 
 import { ClientInfo, FriendData, GroupData } from 'types/ClientInfo';
-import { newOicqMessage } from 'types/OicqMessage';
+import { newOicqMessage, OicqMessage } from 'types/OicqMessage';
 import { WsConnection } from 'types/WsConnection';
 import {
   FriendCache,
@@ -18,6 +18,7 @@ import {
 } from 'types/caches';
 import { ClientState, OicqAccount, UserId, WsAction, WsId } from 'types/common';
 import {
+  HistoryRequest,
   WsFailureResponse,
   WsResponse,
   WsSuccessResponse,
@@ -291,5 +292,26 @@ export class OicqClient {
       friends: friends,
       groups: groups,
     };
+  }
+
+  async getHistory(wsMessage: HistoryRequest): Promise<OicqMessage[]> {
+    const data = wsMessage.data;
+    if (data.type === 'group') {
+      const group = this.groupList.get(data.id);
+      if (!group) {
+        return [];
+      }
+      return (await group.getChatHistory(data.seq, data.count)).map(
+        (groupMessage) => new OicqMessage(groupMessage)
+      );
+    } else {
+      const friend = this.friendList.get(data.id);
+      if (!friend) {
+        return [];
+      }
+      return (await friend.getChatHistory(data.time, data.count)).map(
+        (privateMessage) => new OicqMessage(privateMessage)
+      );
+    }
   }
 }

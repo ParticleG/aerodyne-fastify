@@ -60,7 +60,7 @@ interface OicqPrivateMessage extends OicqSharedMessage {
   };
 }
 
-class OicqMessage implements OicqSharedMessage {
+export class OicqMessage implements OicqSharedMessage {
   // Public properties
   type: 'discuss' | 'group' | 'private';
   id: number;

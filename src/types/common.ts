@@ -20,4 +20,5 @@ export enum WsAction {
   Logout = 'Logout',
   Message = 'Message',
   ClientInfo = 'ClientInfo',
+  History = 'History',
 }

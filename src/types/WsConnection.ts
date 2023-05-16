@@ -6,7 +6,7 @@ import { Logger, LogLevel } from 'types/Logger';
 import { OicqClient } from 'types/OicqClient';
 import { OicqAccount, UserId, WsAction, WsId } from 'types/common';
 import {
-  ClientInfoRequest,
+  ClientInfoRequest, HistoryRequest,
   ListRequest,
   LoginRequest,
   MessageRequest,
@@ -14,8 +14,8 @@ import {
   SubscribeRequest,
   WsFailureResponse,
   WsResponse,
-  WsSuccessResponse,
-} from 'types/websocket';
+  WsSuccessResponse
+} from "types/websocket";
 import { getSystemInfo } from 'utils/common';
 import { parseWsMessage } from 'utils/validator';
 import * as console from 'console';
@@ -52,6 +52,7 @@ export class WsConnection {
     this.handlerMap.set(WsAction.Login, this.loginHandler);
     this.handlerMap.set(WsAction.Message, this.messageHandler);
     this.handlerMap.set(WsAction.ClientInfo, this.clientInfoHandler);
+    this.handlerMap.set(WsAction.History, this.historyHandler);
   }
 
   subscribe(client: OicqClient) {
@@ -157,6 +158,33 @@ export class WsConnection {
           wsMessage,
           wsMessage.account,
           await client.getInfo()
+        )
+      );
+    } catch (error) {
+      console.log(error);
+      this.respond(error as WsFailureResponse);
+    }
+  }
+
+  private async historyHandler(wsMessage: HistoryRequest) {
+    const client = this.clientMap.get(wsMessage.account);
+    if (client === undefined) {
+      this.respond(
+        WsFailureResponse.fromRequest(
+          wsMessage,
+          wsMessage.account,
+          'Client not found',
+          ['Subscribe to the account first']
+        )
+      );
+      return;
+    }
+    try {
+      this.respond(
+        WsSuccessResponse.fromRequest(
+          wsMessage,
+          wsMessage.account,
+          await client.getHistory(wsMessage)
         )
       );
     } catch (error) {
