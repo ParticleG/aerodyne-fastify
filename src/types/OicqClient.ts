@@ -26,6 +26,7 @@ import {
 import { getAvatarUrl } from 'utils/common';
 
 export class OicqClient {
+  readonly platform: Platform;
   readonly account: OicqAccount;
   private readonly allowedUsers: UserId[] = [];
   private readonly friendCaches = new Map<number, FriendCache>();
@@ -44,6 +45,7 @@ export class OicqClient {
     friendCaches?: Map<number, FriendCache>,
     groupCaches?: Map<number, GroupCache>
   ) {
+    this.platform = platform;
     this.account = account;
     this.state = ClientState.Initializing;
     this.client = createClient({ log_level: 'warn', platform: platform });
@@ -170,6 +172,7 @@ export class OicqClient {
 
   shutdown() {
     return {
+      platform: this.platform,
       account: this.account,
       allowedUsers: this.allowedUsers,
       friendCaches: this.friendCaches,
@@ -202,6 +205,7 @@ export class OicqClient {
 
   login(payload?: string) {
     switch (this.state) {
+      case ClientState.Offline:
       case ClientState.Initializing: {
         this.client.login(this.account, payload).then();
         break;
@@ -296,22 +300,15 @@ export class OicqClient {
 
   async getHistory(wsMessage: HistoryRequest): Promise<OicqMessage[]> {
     const data = wsMessage.data;
-    if (data.type === 'group') {
-      const group = this.groupList.get(data.id);
-      if (!group) {
-        return [];
-      }
-      return (await group.getChatHistory(data.seq, data.count)).map(
-        (groupMessage) => new OicqMessage(groupMessage)
-      );
-    } else {
-      const friend = this.friendList.get(data.id);
-      if (!friend) {
-        return [];
-      }
-      return (await friend.getChatHistory(data.time, data.count)).map(
-        (privateMessage) => new OicqMessage(privateMessage)
-      );
+    const container =
+      data.type === 'group'
+        ? this.groupList.get(data.id)
+        : this.friendList.get(data.id);
+    if (!container) {
+      return [];
     }
+    return (await container.getChatHistory(data.start, data.count)).map(
+      (message) => new OicqMessage(message)
+    );
   }
 }

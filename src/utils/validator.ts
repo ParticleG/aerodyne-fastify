@@ -4,6 +4,7 @@ import { Logger } from 'types/Logger';
 import { WsAction } from 'types/common';
 import {
   ClientInfoRequest,
+  HistoryRequest,
   ListRequest,
   LoginRequest,
   LogoutRequest,
@@ -42,8 +43,7 @@ const sharedProperties = (
 };
 
 const WsMessageParser = ajv.compileParser(
-  sharedProperties(false, null, {
-    account: { type: 'float64' },
+  sharedProperties(true, null, {
     data: { nullable: true },
   }) as JTDSchemaType<WsRequest>
 );
@@ -96,6 +96,23 @@ wsMessageValidators.set(
 wsMessageValidators.set(
   WsAction.ClientInfo,
   ajv.compile(sharedProperties(true) as JTDSchemaType<ClientInfoRequest>)
+);
+wsMessageValidators.set(
+  WsAction.History,
+  ajv.compile(
+    sharedProperties(true, {
+      data: {
+        properties: {
+          id: { type: 'float64' },
+          type: { enum: ['group', 'user'] },
+        },
+        optionalProperties: {
+          start: { type: 'float64' },
+          count: { type: 'float64' },
+        },
+      },
+    }) as JTDSchemaType<HistoryRequest>
+  )
 );
 
 Object.values(WsAction).forEach((action) => {

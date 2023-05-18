@@ -1,5 +1,5 @@
 import { DiscussMessage, GroupMessage, PrivateMessage } from 'icqq';
-import { MessageElem } from 'icqq/lib/message/elements';
+import { MessageElem, Quotable } from 'icqq/lib/message/elements';
 import { Anonymous } from 'icqq/lib/message/message';
 import { GroupRole } from 'icqq/lib/common';
 import { getAvatarUrl } from 'utils/common';
@@ -16,6 +16,7 @@ interface OicqSharedMessage {
   messageId: string;
   seq: number;
   rand: number;
+  source?: Quotable;
   packetNo: number;
   index: number;
   div: number;
@@ -73,6 +74,7 @@ export class OicqMessage implements OicqSharedMessage {
   messageId: string;
   seq: number;
   rand: number;
+  source?: Quotable;
   packetNo: number;
   index: number;
   div: number;
@@ -104,6 +106,7 @@ export class OicqMessage implements OicqSharedMessage {
     this.messageId = message.message_id;
     this.seq = message.seq;
     this.rand = message.rand;
+    this.source = message.source;
     this.packetNo = message.pktnum;
     this.index = message.index;
     this.div = message.div;

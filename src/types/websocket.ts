@@ -55,19 +55,12 @@ export interface ClientInfoRequest extends WsRequest {
 export interface HistoryRequest extends WsRequest {
   action: WsAction.ClientInfo;
   account: OicqAccount;
-  data:
-    | {
-        id: number;
-        type: 'user';
-        time?: number;
-        count?: number;
-      }
-    | {
-        id: number;
-        type: 'group';
-        seq?: number;
-        count?: number;
-      };
+  data: {
+    id: number;
+    type: 'group' | 'user';
+    start?: number;
+    count?: number;
+  };
 }
 
 export class WsResponse implements WsRequest {

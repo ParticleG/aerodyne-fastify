@@ -6,7 +6,8 @@ import { Logger, LogLevel } from 'types/Logger';
 import { OicqClient } from 'types/OicqClient';
 import { OicqAccount, UserId, WsAction, WsId } from 'types/common';
 import {
-  ClientInfoRequest, HistoryRequest,
+  ClientInfoRequest,
+  HistoryRequest,
   ListRequest,
   LoginRequest,
   MessageRequest,
@@ -14,8 +15,8 @@ import {
   SubscribeRequest,
   WsFailureResponse,
   WsResponse,
-  WsSuccessResponse
-} from "types/websocket";
+  WsSuccessResponse,
+} from 'types/websocket';
 import { getSystemInfo } from 'utils/common';
 import { parseWsMessage } from 'utils/validator';
 import * as console from 'console';
