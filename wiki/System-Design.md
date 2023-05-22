@@ -6,10 +6,11 @@
 classDiagram
     OicqClient ..> Protocol
     OicqClient ..> ClientState
-    OicqClient ..> Contact
+    OicqClient "1" --o "N" Contact: contains
     note for OicqClient "ContactId = `${Contact.type}_${Contact.id}`"
     class OicqClient {
         +protocol: Protocol
+        +account: number
         +state: ClientState
         -authorizedUserIds: Array~number~
         -contactMap: Map~ContactId，Contact~
@@ -31,13 +32,35 @@ classDiagram
         WAITING_SMS
         ONLINE
     }
-    
+
+    Contact ..> Friend
+    Contact ..> Group
+    Contact ..> User
     class Contact {
-        +type: 'user' | 'friend' | 'group'
+        Friend | Group | User
+    }
+
+    Friend --|> User
+    class Friend {
+        +type: 'friend'
+    }
+
+    User ..> Gender
+    class User {
+        +type: 'user'
         +id: number
         +name: string
+        +sex: Gender
         +avatar: string
         +updateInfo(): Promise~void~
+        +getChatHistory(number? start, number? count) Promise~PrivateMessage[]~
+        +markAsRead(number? start) Promise~void~
+        +recallMessage(string messageId) Promise~boolean~
+        +sendMessage(Message message) Promise~MessageRes~
+    }
+    
+    class Gender {
+        'male' | 'female' | 'unknown'
     }
 ```
 
